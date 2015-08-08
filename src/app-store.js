@@ -2,28 +2,38 @@ function AppStore() {
     riot.observable(this)
 
     var self = this;
-    self.items = [
-        {title: 'tops', done: false},
-        {title: 'timmy', done: false},
-        {title: 'torment', done: false}
-    ];
+    self.rooms = API.rooms;
 
-    self.on('item_add', function(newitem) {
-        self.items.push(newitem);
-        self.trigger('items_changed', self.items);
+    //LOGIN
+    self.on('login.enter', function() {
+        self.trigger('screen_changed', 'lobby');
     });
 
-    self.on('item_remove', function() {
-        //loop through items, remove done ones
-        var notDone = [];
-        for(var i=0; i<self.items.length; i++) {
-            if(!self.items[i].done) notDone.push(self.items[i]);
-        }
-        self.items = notDone;
-        self.trigger('items_changed', self.items);
+    //LOBBY
+
+    //lobby init
+    self.on('lobby.init', function() {
+        self.trigger('rooms_loaded', self.rooms);
     });
 
-    self.on('item_init', function() {
-        self.trigger('items_changed', self.items);
+    //when a new room is created
+    self.on('lobby.create_room', function(roomData) {
+        var room = {
+            id: self.rooms.length,
+            name: roomData.name,
+            open: roomData.open
+        };
+        self.rooms.push(room);
+        self.trigger('room_added', self.items);
+    });
+
+
+    //ROOM
+
+    //user left room
+    self.on('room.left_room', function(user, roomId) {
+        //remove user from room
+        //check if room is empty
+        //if empty, delete room
     });
 }

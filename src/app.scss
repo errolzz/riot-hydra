@@ -1,3 +1,19 @@
+
+//colors
+$black: #121212;
+$white: #fefefe;
+$gray-light: #dddddd;
+$gray-dark: #212121;
+$pink: #ff2c8c;
+$red: #af2e2e;
+
+//fonts
+$sans: sans-serif;
+$sans-bold: sans-serif;
+
 body {
     margin: 0;
+    background: $black;
+    color: $gray-light;
+    font-family: $sans;
 }

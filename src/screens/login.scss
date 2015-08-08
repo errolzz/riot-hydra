@@ -1,0 +1,21 @@
+login {
+    text-align: center;
+
+    .first {
+
+    }
+
+    .wizard {
+        display: none;
+    }
+
+    &.logged {
+        .first {
+            display: none;
+        }
+
+        .wizard {
+            display: block;
+        }
+    }
+}

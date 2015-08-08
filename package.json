@@ -5,11 +5,12 @@
   "main": "gulpfile.js",
   "devDependencies": {
     "browser-sync": "~2.7.13",
+    "del": "^1.2.0",
     "gulp": "~3.9.0",
-    "gulp-riot": "~0.2.16",
     "gulp-concat": "~2.6.0",
-    "riot": "~2.2.2",
+    "gulp-riot": "~0.2.16",
     "gulp-sass": "~2.0.3",
+    "riot": "~2.2.2",
     "riotcontrol": "0.0.1"
   }
 }

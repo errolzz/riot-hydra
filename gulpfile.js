@@ -2,6 +2,7 @@
 //npm install gulp gulp-sass gulp-riot browser-sync --save-dev
 
 var gulp            = require('gulp');
+var del             = require('del');
 var riot            = require('gulp-riot');
 var sass            = require('gulp-sass');
 var concat          = require('gulp-concat');
@@ -28,10 +29,14 @@ gulp.task('html', function() {
 
 
 //css
-gulp.task('scss', function () {
-    return gulp.src('./src/**/*.scss')
+gulp.task('scss', ['clean:css'], function () {
+    return gulp.src(['./src/app.scss', './src/components/*.scss', './src/screens/*.scss'])
+        .pipe(concat('app.css'))
         .pipe(sass().on('error', sass.logError))
         .pipe(gulp.dest('./dist/css'));
+});
+gulp.task('clean:css', function() {
+    var deletedFiles = del.sync(['dist/css/**/*.*']);
 });
 gulp.task('styles', ['scss'], function() {
     browserSync.reload();
