@@ -1,6 +1,4 @@
 
-//npm install gulp gulp-sass gulp-riot browser-sync --save-dev
-
 var gulp            = require('gulp');
 var del             = require('del');
 var riot            = require('gulp-riot');
@@ -56,12 +54,15 @@ gulp.task('riot', function () {
 
 //javascript
 gulp.task('js', ['riot'], function() {
-    return gulp.src(['./node_modules/riot/riot.js', 
+    gulp.src(['./node_modules/riot/riot.js', 
             './node_modules/riotcontrol/riotcontrol.js', 
             './src/**/*.js', 
             './dist/js/tags.js'])
         .pipe(concat('scripts.js'))
         .pipe(gulp.dest('./dist/js'));
+    setTimeout(function() {
+        del.sync(['dist/js/tags.js']);
+    }, 1000);
 });
 gulp.task('scripts', ['js'], function() {
     browserSync.reload();

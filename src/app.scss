@@ -1,19 +1,130 @@
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary, time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+input {
+    border: 0;
+    outline: 0;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after, q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
 
 //colors
-$black: #121212;
+$black: #161616;
 $white: #fefefe;
 $gray-light: #dddddd;
 $gray-dark: #212121;
 $pink: #ff2c8c;
 $red: #af2e2e;
 
-//fonts
-$sans: sans-serif;
-$sans-bold: sans-serif;
+//fonts sizes
+$big-font: 40px;
+$med-font: 22px;
+$reg-font: 16px;
 
 body {
     margin: 0;
     background: $black;
     color: $gray-light;
-    font-family: $sans;
+    font-family: 'Montserrat', sans-serif;
+    font-size: $reg-font;
+    letter-spacing: 0.4px;
+    min-width: 800px;
 }
+
+h1, h2, h3, h4 {
+    margin: 0;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: $big-font;
+}
+
+h2 {
+    font-size: $med-font;
+}
+
+p, ul, li {
+    margin: 0;
+    padding: 0;
+    line-height: 1.4em;
+}
+
+li {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+
+::-webkit-input-placeholder {
+   color: darken($gray-light, 30%);
+}
+:-moz-placeholder { /* Firefox 18- */
+   color: darken($gray-light, 30%);
+}
+::-moz-placeholder {  /* Firefox 19+ */
+   color: darken($gray-light, 30%);
+}
+:-ms-input-placeholder {  
+   color: darken($gray-light, 30%);
+}
+
+login, lobby, room {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: row;
+}
+
+@mixin action-text() {
+    color: $pink;
+    cursor: pointer;
+    &:hover {
+        color: $white;
+    }
+}
+
+@mixin text-field() {
+    font-family: 'Montserrat', sans-serif;
+    background: $gray-dark;
+    color: $gray-light;
+    font-size: $reg-font;
+    padding: 13px;
+}
+
+
+
+

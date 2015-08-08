@@ -13,7 +13,7 @@ var API = {
         },
         {
             id: 1,
-            name: '90s Hip Hop',
+            name: '90\'s Hip Hop',
             open: true,
             audience: [
                 '90923324'

@@ -1,0 +1,65 @@
+lobby {
+    .sidebar {
+        padding: 30px;
+        width: 25%;
+
+        h2 {
+            color: $white;
+            margin-bottom: 19px;
+        }
+        p {
+            width: 90%;
+        }
+    }
+    .roomlist {
+        width: 75%;
+        margin-top: 47px;
+
+        .create-new {
+            overflow: auto;
+            margin-bottom: 40px;
+            input {
+                @include text-field();
+                margin: 12px 30px 0 0;
+                width: 300px;
+                float: left;
+            }
+            p {
+                @include action-text();
+                float: left;
+                margin-top: 24px;
+            }
+        }
+
+        li {
+            @include action-text();
+            box-sizing: border-box;
+            height: 76px;
+            overflow: auto;
+            font-weight: 700;
+            padding: 18px 0;
+
+            .name {
+                float: left;
+                font-size: $big-font;
+                line-height: 1em;
+            }
+            .count {
+                display: none;
+                float: left;
+                font-size: $med-font;
+                margin: 12px 0 0 10px;
+                line-height: 1em;
+            }
+
+            &:hover {
+                .count {
+                    display: block;
+                }
+            }
+        }
+    }
+    .create-room {
+        display: none;
+    }
+}

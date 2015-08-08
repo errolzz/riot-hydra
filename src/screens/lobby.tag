@@ -1,19 +1,19 @@
 <lobby>
-    <div class="panel">
+    <div class="sidebar">
         <h2>hydra.fm</h2>
-        <p>Join a listening room or create a new one.</p>
+        <p>Join a listening room or create your own.</p>
     </div>
-    <div class="rooms">
+    <div class="roomlist">
+        <div class="create-new">
+            <input type="text" placeholder="search rooms">
+            <p>+ Create new room</p>
+        </div>
         <ul>
-            <li>
-                <div>
-                    <input type="text" placeholder="search rooms">
-                </div>
-                <p>+ Create new room</p>
-            </li>
             <li each={ rooms }>
-                <p>Room Name</p>
-                <button>Join</button>
+                <div class="room-label" onclick={roomClick}>
+                    <p class="name">{name}</p>
+                    <p class="count">(33 Listeners)</p>
+                </div>
             </li>
         </ul>
     </div>
@@ -25,7 +25,7 @@
 
     <script>
         var self = this
-        self.rooms = [];
+        self.rooms = API.rooms;
 
         self.on('mount', function() {
             // Trigger init event when component is mounted to page.
@@ -39,9 +39,13 @@
 
         createRoom(e) {
             if(self.newRoomName) {
-                RiotControl.trigger('lobby.create_room', { name: self.text, open: true })
+                RiotControl.trigger('lobby.create_room', {name: self.text, open: true})
                 self.text = self.input.value = ''
             }
+        }
+
+        roomClick(e) {
+            RiotControl.trigger('lobby.enter_room', {id: e.item})
         }
 
         // Register a listener for store change events.
