@@ -10,7 +10,7 @@
         </div>
         <ul>
             <li each={ rooms }>
-                <div class="room-label" onclick={roomClick}>
+                <div class="room-label" onclick={parent.roomClick}>
                     <p class="name">{name}</p>
                     <p class="count">(33 Listeners)</p>
                 </div>
@@ -45,11 +45,11 @@
         }
 
         roomClick(e) {
-            RiotControl.trigger('lobby.enter_room', {id: e.item})
+            RiotControl.trigger('lobby.enter_room', e.item)
         }
 
         // Register a listener for store change events.
-        RiotControl.on('lobby.create_room', function(items) {
+        RiotControl.on('room_added', function(items) {
             
         })
     </script>

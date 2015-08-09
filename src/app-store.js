@@ -11,19 +11,17 @@ function AppStore() {
 
 
     //LOBBY
+    self.on('lobby.init', function() {
+        //lobby init
+        self.trigger('rooms_loaded', self.rooms);
+    });
+
     self.on('lobby.enter_room', function(room) {
         //set url to '/room/' + room
         //for now
+        console.log(room)
         self.trigger('screen_changed', 'room');
-
-        setTimeout(function() {
-            self.trigger('render_room', room);
-        },600);
-    });
-
-    //lobby init
-    self.on('lobby.init', function() {
-        self.trigger('rooms_loaded', self.rooms);
+        self.trigger('render_room', room);
     });
 
     //when a new room is created
