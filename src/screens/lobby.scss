@@ -1,5 +1,6 @@
 lobby {
     .sidebar {
+        position: relative;
         padding: 30px;
         width: 25%;
 
@@ -10,8 +11,14 @@ lobby {
         p {
             width: 90%;
         }
+        .logout {
+            @include action-text();
+            position: absolute;
+            bottom: 13px;
+            left: 13px;
+        }
     }
-    .roomlist {
+    .room-list {
         width: 75%;
         margin-top: 47px;
 
@@ -58,5 +65,43 @@ lobby {
     }
     .create-room {
         display: none;
+        margin-top: 71px;
+
+        .name-label {
+            margin-bottom: 13px;
+        }
+
+        .room-name {
+            @include text-field();
+            display: block;
+            width: 500px;
+        }
+        .private-label {
+            margin: 44px 0 13px;
+        }
+        .private {
+            margin-bottom: 50px;
+        }
+        .cancel-btn {
+            @include action-text();
+            float: left;
+        }
+        .create-btn {
+            margin-top: -12px;
+            float: right;
+        }
+        .error {
+            color: $highlight;
+            margin-top: 12px;
+        }
+    }
+
+    section.create {
+        .room-list {
+            display: none;
+        }
+        .create-room {
+            display: block;
+        }
     }
 }

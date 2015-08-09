@@ -5,10 +5,10 @@ var API = {
             name: 'Best Room One',
             open: true,
             audience: [
-                '123312323'
+                {id: '123312323', name: 'FreddyBoots'}
             ],
             djs: [
-                '927434983'
+                {id: '927434983', name: 'JasonVorehead'}
             ]
         },
         {
@@ -16,10 +16,10 @@ var API = {
             name: 'Nefarious Incantations of Mindrot',
             open: true,
             audience: [
-                '90923324'
+                {id: '90923324', name: 'guryGURY'}
             ],
             djs: [
-                '66543222'
+                {id: '66543222', name: 'o01226'}
             ]
         },
         {
@@ -27,10 +27,10 @@ var API = {
             name: '90\'s Hip Hop',
             open: true,
             audience: [
-                '90923324'
+                {id: '90923324', name: 'dethforester'}
             ],
             djs: [
-                '66543222'
+                {id: '66543222', name: 'King666'}
             ]
         }
     ],

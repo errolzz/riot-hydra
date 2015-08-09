@@ -1,12 +1,16 @@
 
 <app>
-    <login show={screen == 'login'}></login>
+    <login if={screen == 'login'}></login>
     <lobby if={screen == 'lobby'}></lobby>
     <room if={screen == 'room'}></room>
 
     <script>
         var self = this
-        self.screen = 'lobby'
+
+        self.on('mount', function() {
+            self.screen = 'login'
+            self.update()
+        })
 
         RiotControl.on('screen_changed', function(screen) {
             //show only new screen

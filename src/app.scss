@@ -50,6 +50,7 @@ $pink: #ff2c8c;
 $highlight: #17cc90; //#33e5aa;
 
 //fonts sizes
+$sans: 'Roboto', sans-serif;
 $big-font: 40px;
 $med-font: 22px;
 $reg-font: 14px;
@@ -61,7 +62,7 @@ body {
     margin: 0;
     background: $black;
     color: $gray-light;
-    font-family: 'Roboto', sans-serif;
+    font-family: $sans;
     font-size: $reg-font;
     font-weight: 300;
     line-height: 0;
@@ -76,11 +77,7 @@ h1, h2, h3, h4 {
     line-height: 1em;
 }
 
-h1 {
-    font-size: $big-font;
-}
-
-h2 {
+h1, h2 {
     font-size: $med-font;
 }
 
@@ -98,6 +95,25 @@ a {
     text-decoration: none;
 }
 
+button {
+    outline: none;
+    border-radius: 0;
+    border: 0;
+    height: 42px;
+    padding: 10px 13px;
+    font-weight: 300;
+    font-family: $sans;
+    background: $pink;
+    color: $white;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover {
+        color: $pink;
+        background: $white;
+    }
+}
+
 ::-webkit-input-placeholder {
    color: darken($gray-light, 30%);
 }
@@ -111,7 +127,8 @@ a {
    color: darken($gray-light, 30%);
 }
 
-login, lobby, room {
+lobby section, room section {
+    height: 100%;
     display: -webkit-box;
     display: -moz-box;
     display: -ms-flexbox;
@@ -129,7 +146,7 @@ login, lobby, room {
 }
 
 @mixin text-field() {
-    font-family: 'Roboto', sans-serif;
+    font-family: $sans;
     background: $gray-dark;
     color: $gray-light;
     font-size: $reg-font;

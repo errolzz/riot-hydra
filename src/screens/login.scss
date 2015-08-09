@@ -1,15 +1,31 @@
 login {
     text-align: center;
 
-    .first {
+    h1 {
+        margin: 100px 0;
+    }
 
+    .first {
+        p {
+            margin-bottom: 20px;
+        }
     }
 
     .wizard {
         display: none;
+        p {
+            margin-bottom: 20px;
+        }
+        input {
+            @include text-field();
+        }
+        .error {
+            margin: 20px 0 0;
+            color: $highlight;
+        }
     }
 
-    &.logged {
+    section.logged {
         .first {
             display: none;
         }
