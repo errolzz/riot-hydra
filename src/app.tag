@@ -6,7 +6,7 @@
 
     <script>
         var self = this
-        self.screen = 'login'
+        self.screen = 'lobby'
 
         RiotControl.on('screen_changed', function(screen) {
             //show only new screen
@@ -15,7 +15,7 @@
         })
 
         setTimeout(function() {
-            RiotControl.trigger('lobby.enter_room', API.rooms[0])
+            //RiotControl.trigger('lobby.enter_room', API.rooms[0])
         }, 600)
     </script>
 </app>

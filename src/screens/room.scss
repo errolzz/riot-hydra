@@ -1,0 +1,223 @@
+room {
+    height: 100%;
+
+    .avatar, .be-dj {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        background: #fff;
+        margin-right: 2px;
+        float: left;
+
+        .avatar-name {
+            display: none;
+            position: absolute;
+            text-align: center;
+            cursor: default;
+            top: 0px;
+            left: 50%;
+            margin-left: -70px;
+            width: 140px;
+            background: $highlight;
+            color: $white;
+            height: 42px;
+            padding: 12px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        &.playing {
+            margin-top: 13px;
+        }
+
+        &:hover {
+            .avatar-name {
+                display: block;
+            }
+        }
+    }
+
+    .sidebar {
+        position: relative;
+        width: 25%;
+        border-right: 2px solid $gray-dark;
+
+        .search {
+            @include text-field();
+            margin: 0 0 30px;
+            width: 100%;
+        }
+
+        .container {
+            padding: 0 13px 13px;
+        }
+
+        .dropdown {
+            margin-bottom: 22px;
+            cursor: pointer;
+
+            .selected {
+                color: $pink;
+            }
+            .options {
+                display: none;
+            }
+            &.open {
+                .options {
+                    display: block;
+                    margin-top: -30px;
+                }
+            }
+        }
+
+        .tracks {
+            li {
+                .num {
+                    color: $gray-med;
+                }
+                margin-bottom: 22px;
+            }
+        }
+
+        .leave {
+            @include action-text();
+            position: absolute;
+            padding: 13px;
+            left: 0px;
+            bottom: 0px;
+        }
+    }
+
+    .chat {
+        position: relative;
+        padding: 13px;
+        width: 25%;
+        border-right: 2px solid $gray-dark;
+
+        .room-name {
+            color: $white;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        .convo {
+            .message {
+                margin-bottom: 22px;
+                .user {
+                    color: $highlight;
+                }
+            }
+        }
+
+        .chat-box {
+            @include text-field();
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+            width: 100%;
+        }
+    }
+
+    .stage {
+        position: relative;
+        width: 50%;
+
+        .logo {
+            position: absolute;
+            right: 13px;
+            bottom: 13px;
+        }
+
+        .video-holder {
+            position: relative;
+
+            .djs {
+                position: absolute;
+                top: 0;
+                left: 0;
+
+                .be-dj {
+                    background: $pink;
+                    cursor: pointer;
+
+                    .plus {
+                        position: absolute;
+                        top: 13px;
+                        left: 13px;
+                    }
+
+                    .h {
+                        position: absolute;
+                        background: $white;
+                        width: 15px;
+                        height: 1px;
+                        top: 7px;
+                        left: 0px;
+                    }
+                    .v {
+                        position: absolute;
+                        background: $white;
+                        width: 1px;
+                        height: 15px;
+                        top: 0px;
+                        left: 7px;
+                    }
+
+                    &:hover {
+                        background: $white;
+                        .h, .v {
+                            background: $pink;
+                        }
+                    }
+                }
+            }
+            .overlay {
+                display: none;
+                position: absolute;
+                height: 84px;
+                width: 90%;
+                bottom: 0px;
+                right: 0px;
+
+                .title {
+                    position: absolute;
+                    right: 0px;
+                    top: 0px;
+                    padding: 12px;
+                    height: 42px;
+                    background: $black;
+                    color: $white;
+                    font-weight: 500;
+                }
+                .like {
+                    position: absolute;
+                    right: 0px;
+                    top: 42px;
+                    padding: 12px;
+                    height: 42px;
+                    background: $pink;
+                    color: $white;
+                    cursor: pointer;
+                    &:hover {
+                        background: $white;
+                        color: $pink;
+                    }
+                }
+            }
+
+            &:hover {
+                .overlay {
+                    display: block;
+                }
+            }
+        }
+
+        .audience {
+            padding: 13px;
+            .avatar {
+                float: left;
+                margin-right: 13px;
+            }
+        }
+    }
+}

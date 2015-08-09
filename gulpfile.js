@@ -11,6 +11,7 @@ var browserSync     = require('browser-sync').create();
 //watch for development
 gulp.task('watch', function() {
     gulp.start('copy', 'html', 'scripts', 'styles');
+    gulp.watch('./src/assets/**/*.*', ['copy']);
     gulp.watch('./src/**/*.js', ['scripts']);
     gulp.watch('./src/**/*.tag', ['scripts']);
     gulp.watch('./src/**/*.scss', ['styles']);
@@ -28,6 +29,7 @@ gulp.task('html', function() {
 
 //css
 gulp.task('scss', ['clean:css'], function () {
+    console.log('scss ' + Math.random())
     return gulp.src(['./src/app.scss', './src/components/*.scss', './src/screens/*.scss'])
         .pipe(concat('app.css'))
         .pipe(sass().on('error', sass.logError))
@@ -72,7 +74,8 @@ gulp.task('scripts', ['js'], function() {
 
 //assets
 gulp.task('copy', function() {
-    return gulp.src(['./assets/**/*.*'])
+    console.log('COPYING')
+    return gulp.src(['./src/assets/**/*.*'])
         .pipe(gulp.dest('./dist/assets'));
 });
 

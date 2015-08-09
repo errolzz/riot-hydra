@@ -36,33 +36,44 @@ table {
     border-collapse: collapse;
     border-spacing: 0;
 }
+* {
+    box-sizing: border-box;
+}
 
 //colors
 $black: #161616;
 $white: #fefefe;
 $gray-light: #dddddd;
+$gray-med: #666666;
 $gray-dark: #212121;
 $pink: #ff2c8c;
-$red: #af2e2e;
+$highlight: #17cc90; //#33e5aa;
 
 //fonts sizes
 $big-font: 40px;
 $med-font: 22px;
-$reg-font: 16px;
+$reg-font: 14px;
 
+html {
+    height: 100%;
+}
 body {
     margin: 0;
     background: $black;
     color: $gray-light;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: $reg-font;
-    letter-spacing: 0.4px;
-    min-width: 800px;
+    font-weight: 300;
+    line-height: 0;
+    letter-spacing: 0.8px;
+    min-width: 1024px;
+    height: 100%;
 }
 
 h1, h2, h3, h4 {
     margin: 0;
-    font-weight: 700;
+    font-weight: 500;
+    line-height: 1em;
 }
 
 h1 {
@@ -118,10 +129,11 @@ login, lobby, room {
 }
 
 @mixin text-field() {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Roboto', sans-serif;
     background: $gray-dark;
     color: $gray-light;
     font-size: $reg-font;
+    font-weight: 300;
     padding: 13px;
 }
 

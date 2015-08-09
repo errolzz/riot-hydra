@@ -1,53 +1,72 @@
 <room>
     <div class="sidebar">
-        <input type="text" placeholder="search music">
-        <div class="dropdown">
-            <div class="selected">
-                <p>Gansta 1999 List</p>
+        <input class="search" type="text" placeholder="search music">
+        <div class="container">
+            <div class="dropdown">
+                <div class="selected">
+                    <p>Gansta 1999 List</p>
+                </div>
+                <div class="options">
+                    <ul>
+                        <li>List Numba One</li>
+                        <li class="new-list">+ Create New List</li>
+                    </ul>
+                </div>
             </div>
-            <div class="options">
-                <ul>
-                    <li>List Numba One</li>
-                    <li class="new-list">+ Create New List</li>
-                </ul>
-            </div>
+            <ul class="tracks">
+                <li><span class="num">1.</span> Song One</li>
+                <li><span class="num">2.</span> Track of the Two</li>
+                <li><span class="num">3.</span> Liars</li>
+                <li><span class="num">4.</span> Mission Impossible Soundtrack of the gods</li>
+            </ul>
+            <p class="leave">Leave room</p>
         </div>
-        <ul class="tracks">
-            <li>Song One</li>
-            <li>Track of the Two</li>
-        </ul>
-        <p class="leave">Leave room</p>
     </div>
     <div class="chat">
-        <p>{room.name}</p>
+        <p class="room-name">{room.name}</p>
         <div class="convo">
-            <p><span class="user">wzrdfght:</span> <span class="message"> Hi everybody!</span></p>
+            <p class="message"><span class="user">wzrdfght:</span> <span class="text"> Hi everybody!</span></p>
+            <p class="message"><span class="user">ViLLaiN:</span> <span class="text"> All right yes that is possible but unlikey as we agreed right?</span></p>
         </div>
-        <input type="text" placeholder="chat">
+        <input class="chat-box" type="text" placeholder="chat">
     </div>
     <div class="stage">
         <div class="video-holder">
+            <div class="video">
+                <img src="assets/img/chiddy-bang.jpg" alt="" width="100%" />
+            </div>
             <div class="djs">
-                <div class="avatar"></div>
-                <div class="avatar"></div>
-                <div class="avatar"></div>
-                <div class="avatar"></div>
-                <div class="be-dj"></div>
+                <div class="avatar"><p class="avatar-name">Jess666</p></div>
+                <div class="avatar playing"><p class="avatar-name">TinklerDeath</p></div>
+                <div class="avatar"><p class="avatar-name">rouseyrondaa</p></div>
+                <div class="avatar"><p class="avatar-name">fishmonger</p></div>
+                <div class="be-dj">
+                    <div class="plus">
+                        <div class="h"></div>
+                        <div class="v"></div>
+                    </div>
+                </div>
             </div>
             <div class="overlay">
                 <p class="title">Song Title</p>
-                <p class="like-song">+ Apprecieate Track +</p>
+                <p class="like">* Apprecieate Track *</p>
             </div>
         </div>
         <div class="audience">
-            <ul>
-                <li>
-                    <div class="avatar"></div>
-                    <p class="avatar-name">DJ Fonky Family</p>
-                </li>
-            </ul>
+            <div class="avatar">
+                <p class="avatar-name">DJ Fonky Family</p>
+            </div>
+            <div class="avatar">
+                <p class="avatar-name">DJ Fonky Family</p>
+            </div>
+            <div class="avatar">
+                <p class="avatar-name">DJ Fonky Family</p>
+            </div>
+            <div class="avatar">
+                <p class="avatar-name">DJ Fonky Family</p>
+            </div>
         </div>
-        <div class="logo">hydra.fm</div>
+        <h2 class="logo">hydra.fm</h2>
     </div>
 
     <script>

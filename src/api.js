@@ -13,6 +13,17 @@ var API = {
         },
         {
             id: 1,
+            name: 'Nefarious Incantations of Mindrot',
+            open: true,
+            audience: [
+                '90923324'
+            ],
+            djs: [
+                '66543222'
+            ]
+        },
+        {
+            id: 2,
             name: '90\'s Hip Hop',
             open: true,
             audience: [

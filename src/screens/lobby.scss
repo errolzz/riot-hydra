@@ -33,11 +33,8 @@ lobby {
 
         li {
             @include action-text();
-            box-sizing: border-box;
-            height: 76px;
             overflow: auto;
-            font-weight: 700;
-            padding: 18px 0;
+            padding: 14px 0;
 
             .name {
                 float: left;
@@ -48,7 +45,7 @@ lobby {
                 display: none;
                 float: left;
                 font-size: $med-font;
-                margin: 12px 0 0 10px;
+                margin: 11px 0 0 10px;
                 line-height: 1em;
             }
 
