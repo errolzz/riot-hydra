@@ -119,7 +119,7 @@ function onGoogleSignIn(googleUser) {
     xhrInfo.onload = function() {
         var res = JSON.parse(xhrInfo.responseText);
         if(res.aud == '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com') {
-            //all set, overwrite google id with authed token id
+            //all set, save token
             profile.token = id_token;
             appStore.signedIn(profile);
         } else {

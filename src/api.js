@@ -35,10 +35,6 @@ var API = {
         }
     ],
     users: [
-        /*{
-            id: '108893217486172612403', //errol!
-            name: 'JUNK0'
-        },*/
         {
             id: '123312323',
             name: 'RotFat666'
