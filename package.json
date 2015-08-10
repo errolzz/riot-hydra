@@ -4,14 +4,16 @@
   "description": "",
   "main": "gulpfile.js",
   "devDependencies": {
-    "browser-sync": "~2.7.13",
     "del": "^1.2.0",
     "gulp": "~3.9.0",
     "gulp-concat": "~2.6.0",
     "gulp-riot": "~0.2.16",
     "gulp-sass": "~2.0.3",
-    "normalize.css": "^3.0.3",
     "riot": "~2.2.2",
     "riotcontrol": "0.0.1"
+  },
+  "dependencies": {
+    "express": "~4.13.3",
+    "jade": "~1.11.0"
   }
 }

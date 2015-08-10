@@ -9,6 +9,26 @@ login {
         p {
             margin-bottom: 20px;
         }
+        .g-signin2 {
+            display: inline-block;
+            margin-bottom: 16px;
+
+            .abcRioButton {
+                outline: none;
+                border-radius: 0;
+                border: 0;
+                box-shadow: 0;
+            }
+            .abcRioButtonContentWrapper {
+                outline: none;
+                border-radius: 0;
+                border: 0;
+                font-weight: 300;
+                font-family: $sans;
+                font-size: 14px;
+                padding: 1px;
+            }
+        }
     }
 
     .wizard {
@@ -20,8 +40,12 @@ login {
             @include text-field();
         }
         .error {
-            margin: 20px 0 0;
+            margin-top: 20px;
             color: $highlight;
+        }
+        .sign-out {
+            margin-top: 20px;
+            color: $pink;
         }
     }
 

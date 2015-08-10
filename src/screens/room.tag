@@ -74,7 +74,6 @@
     <script>
         var self = this;
         RiotControl.on('render_room', function(room) {
-            console.log('rendering')
             self.room = room
             self.update()
         });

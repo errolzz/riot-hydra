@@ -1,0 +1,20 @@
+html
+    head
+        title hydra.fm
+        
+        meta(name="google-signin-client_id" content="325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com")
+
+        link(href="http://fonts.googleapis.com/css?family=Roboto:300,500" rel="stylesheet" type="text/css")
+        link(type="text/css" rel="stylesheet" href="//www.gstatic.com/authtoolkit/css/gitkit.css")
+        link(rel="stylesheet" href="css/app.css" type="text/css")
+
+        script(src="https://apis.google.com/js/platform.js" async defer)
+
+    body
+        app
+
+        script(src="js/scripts.js" type="text/javascript")
+        script.
+            var appStore = new AppStore();
+            RiotControl.addStore(appStore) // Register the store in central dispatch.
+            riot.mount('app')

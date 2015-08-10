@@ -4,32 +4,22 @@ var del             = require('del');
 var riot            = require('gulp-riot');
 var sass            = require('gulp-sass');
 var concat          = require('gulp-concat');
-var browserSync     = require('browser-sync').create();
 
 
 
 //watch for development
 gulp.task('watch', function() {
-    gulp.start('copy', 'html', 'scripts', 'styles');
+    gulp.start('copy', 'scripts', 'styles');
     gulp.watch('./src/assets/**/*.*', ['copy']);
     gulp.watch('./src/**/*.js', ['scripts']);
     gulp.watch('./src/**/*.tag', ['scripts']);
     gulp.watch('./src/**/*.scss', ['styles']);
-    gulp.watch('./src/**/*.html', ['html']);
 });
 
-
-
-//html
-gulp.task('html', function() {
-    return gulp.src('./src/**/*.html')
-        .pipe(gulp.dest('./dist'))
-});
 
 
 //css
-gulp.task('scss', ['clean:css'], function () {
-    console.log('scss ' + Math.random())
+gulp.task('styles', ['clean:css'], function () {
     return gulp.src(['./src/app.scss', './src/components/*.scss', './src/screens/*.scss'])
         .pipe(concat('app.css'))
         .pipe(sass().on('error', sass.logError))
@@ -37,9 +27,6 @@ gulp.task('scss', ['clean:css'], function () {
 });
 gulp.task('clean:css', function() {
     var deletedFiles = del.sync(['dist/css/**/*.*']);
-});
-gulp.task('styles', ['scss'], function() {
-    browserSync.reload();
 });
 
 
@@ -55,7 +42,7 @@ gulp.task('riot', function () {
 
 
 //javascript
-gulp.task('js', ['riot'], function() {
+gulp.task('scripts', ['riot'], function() {
     gulp.src(['./node_modules/riot/riot.js', 
             './node_modules/riotcontrol/riotcontrol.js', 
             './src/**/*.js', 
@@ -65,9 +52,6 @@ gulp.task('js', ['riot'], function() {
     setTimeout(function() {
         del.sync(['dist/js/tags.js']);
     }, 1000);
-});
-gulp.task('scripts', ['js'], function() {
-    browserSync.reload();
 });
 
 
@@ -81,19 +65,7 @@ gulp.task('copy', function() {
 
 
 
-//server
-gulp.task('browser-sync', function() {
-    browserSync.init({
-        port: 8000,
-        server: {
-            baseDir: './dist'
-        }
-    });
-});
-
-
-
-gulp.task('default', ['watch', 'browser-sync']);
+gulp.task('default', ['watch']);
 
 
 

@@ -3,7 +3,7 @@
         <div class="sidebar">
             <h2>hydra.fm</h2>
             <p>Join a listening room or create your own.</p>
-            <p class="logout">Log out</p>
+            <p class="logout" onclick={signOut}>Log out</p>
         </div>
         <div class="room-list">
             <div class="create-new">
@@ -42,7 +42,6 @@
             // Any store could respond to this.
             RiotControl.trigger('lobby.init')
             self.showCreate = false
-            console.log('lobby init')
         })
 
         RiotControl.on('update_lobby', function(rooms) {
@@ -75,18 +74,26 @@
             }
         }
 
-        roomClick(e) {
-            RiotControl.trigger('lobby.enter_room', e.item)
-        }
-
-        // Register a listener for store change events.
+        //room list
         RiotControl.on('rooms_loaded', function(rooms) {
             self.rooms = rooms
             self.update()
         })
 
+        //room clicked, enter room
+        roomClick(e) {
+            RiotControl.trigger('lobby.enter_room', e.item)
+        }
+
+        //new room was created, enter room
         RiotControl.on('room_added', function(room) {
             RiotControl.trigger('lobby.enter_room', room)
         })
+
+        signOut(e) {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut();
+            window.location = '/';
+        }
     </script>
 </lobby>

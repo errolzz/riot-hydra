@@ -1,6 +1,6 @@
 
 <app>
-    <login if={screen == 'login'}></login>
+    <login show={screen == 'login'}></login>
     <lobby if={screen == 'lobby'}></lobby>
     <room if={screen == 'room'}></room>
 
@@ -10,6 +10,7 @@
         self.on('mount', function() {
             self.screen = 'login'
             self.update()
+            RiotControl.trigger('app.app_mounted')
         })
 
         RiotControl.on('screen_changed', function(screen) {
@@ -17,9 +18,5 @@
             self.screen = screen
             self.update()
         })
-
-        setTimeout(function() {
-            //RiotControl.trigger('lobby.enter_room', API.rooms[0])
-        }, 600)
     </script>
 </app>
