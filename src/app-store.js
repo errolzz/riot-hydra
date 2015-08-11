@@ -12,10 +12,7 @@ function AppStore() {
         //check if user has been here before
         U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
             //if no user was found
-            console.log('wat');
-            console.log(data);
             if(data.googleId == 'none') {
-                console.log('not known user');
                 //new user temp object
                 var firstname = profile.getName().substring(0, profile.getName().indexOf(' '));
                 var u = {
@@ -24,15 +21,23 @@ function AppStore() {
                     img: profile.getImageUrl()
                 };
                 self.trigger('new_user', {user: u, firstname: firstname});
+
+                //make sure they are on the login page if not logged in
+                window.location = '/';
             } else {
                 self.user = data;
-                console.log('known user');
                 //save the users avatar img, it's not saved in the db
                 self.user.img = profile.getImageUrl();
-                console.log(data);
-                //go to lobby
-                riot.route('lobby');
+                
+                var url = String(window.location.hash).substring(1);
+                if(url.length == 0 || url == '#') {
+                    riot.route('lobby');
+                } else {
+                    riot.route(url);
+                }
             }
+
+            document.getElementById('site').style.display = 'block';
         });
     }
 
@@ -41,15 +46,13 @@ function AppStore() {
         riot.route(function(collection, id, action) {
             if(collection == 'lobby') {
                 self.trigger('screen_changed', 'lobby');
-                self.trigger('rooms_loaded', self.rooms);
+                self.trigger('rooms_loaded', self.user, self.rooms);
             } else if(collection == 'room') {
                 var room = U.getOne('id', id, self.rooms);
                 self.trigger('screen_changed', 'room');
-                self.trigger('render_room', room);
+                self.trigger('render_room', self.user, room);
             }
         });
-        var url = String(window.location.hash).substring(1);
-        riot.route(url);
     })
 
 
@@ -148,6 +151,8 @@ U.ajax = function(type, url, success, data, error) {
 function onGoogleSignIn(googleUser) {
     var profile = googleUser.getBasicProfile();
     var id_token = googleUser.getAuthResponse().id_token;
+
+    document.getElementById('site').style.display = 'none';
 
     //validate the id token
     U.ajax('POST', '/signin', function(data) {

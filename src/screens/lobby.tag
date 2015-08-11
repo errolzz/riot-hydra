@@ -3,7 +3,7 @@
         <div class="sidebar">
             <h2>hydra.fm</h2>
             <p>Join a listening room or create your own.</p>
-            <p class="logout" onclick={signOut}>Log out</p>
+            <p class="user"><span class="name">{user.name}</span> - <span class="logout" onclick={signOut}>Log out</span></p>
         </div>
         <div class="room-list">
             <div class="create-new">
@@ -75,8 +75,10 @@
         }
 
         //room list
-        RiotControl.on('rooms_loaded', function(rooms) {
+        RiotControl.on('rooms_loaded', function(user, rooms) {
+            self.user = user
             self.rooms = rooms
+            console.log(self.user)
             self.update()
         })
 

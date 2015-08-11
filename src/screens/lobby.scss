@@ -11,11 +11,17 @@ lobby {
         p {
             width: 90%;
         }
-        .logout {
-            @include action-text();
+        .user {
             position: absolute;
             bottom: 13px;
             left: 13px;
+            .name {
+                font-weight: 700;
+                color: $highlight;
+            }
+            .logout {
+                @include action-text();
+            }
         }
     }
     .room-list {

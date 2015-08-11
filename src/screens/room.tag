@@ -20,7 +20,7 @@
                     <li><span class="num">3.</span> Liars</li>
                     <li><span class="num">4.</span> Mission Impossible Soundtrack of the gods</li>
                 </ul>
-                <p class="leave" onclick={leaveRoom}>Leave room</p>
+                <p class="user"><span class="name">{user.name}</span> - <span class="leave" onclick={leaveRoom}>Leave room</span></p>
             </div>
         </div>
         <div class="chat">
@@ -73,7 +73,8 @@
 
     <script>
         var self = this;
-        RiotControl.on('render_room', function(room) {
+        RiotControl.on('render_room', function(user, room) {
+            self.user = user
             self.room = room
             self.update()
         });

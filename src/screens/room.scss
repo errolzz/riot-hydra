@@ -77,12 +77,17 @@ room {
             }
         }
 
-        .leave {
-            @include action-text();
+        .user {
             position: absolute;
-            padding: 13px;
-            left: 0px;
-            bottom: 0px;
+            bottom: 13px;
+            left: 13px;
+            .name {
+                font-weight: 700;
+                color: $highlight;
+            }
+            .leave {
+                @include action-text();
+            }
         }
     }
 
