@@ -161,6 +161,11 @@ db.once('open', function() {
    console.log('connected to db')
 });
 
+/*
+    mongo terminal
+    http://www.tutorialspoint.com/mongodb/mongodb_drop_collection.htm
+*/
+
 //api
 //video search
 //video sync
