@@ -10,22 +10,30 @@ function AppStore() {
 
     self.signedIn = function(profile) {
         //check if user has been here before
-        self.user = U.getOne('id', profile.token, self.users);
-
-        if(!self.user) {
-            //new user
-            var firstname = profile.getName().substring(0, profile.getName().indexOf(' '));
-            var u = {
-                id: profile.token,
-                name: '',
-                email: profile.getEmail(),
-                img: profile.getImageUrl()
-            };
-            self.trigger('new_user', {user: u, firstname: firstname});
-        } else {
-            //return user
-            riot.route('lobby');
-        }
+        U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
+            //if no user was found
+            console.log('wat');
+            console.log(data);
+            if(data.googleId == 'none') {
+                console.log('not known user');
+                //new user temp object
+                var firstname = profile.getName().substring(0, profile.getName().indexOf(' '));
+                var u = {
+                    googleId: profile.googleId,
+                    name: '',
+                    img: profile.getImageUrl()
+                };
+                self.trigger('new_user', {user: u, firstname: firstname});
+            } else {
+                self.user = data;
+                console.log('known user');
+                //save the users avatar img, it's not saved in the db
+                self.user.img = profile.getImageUrl();
+                console.log(data);
+                //go to lobby
+                riot.route('lobby');
+            }
+        });
     }
 
     //APP / ROUTER
@@ -47,9 +55,14 @@ function AppStore() {
 
     //LOGIN
     self.on('login.createNewUser', function(user) {
-        self.user = user;
-        self.users.push(user);
-        riot.route('lobby');
+        //post new user
+        U.ajax('POST', '/api/users', function(data) {
+            if(data.googleId) {
+                //update local user
+                self.user = user;
+                riot.route('lobby');
+            }
+        }, user);
     });
 
 
@@ -106,6 +119,29 @@ U.removeOne = function(prop, value, list) {
         }
     }
 }
+U.ajax = function(type, url, success, data, error) {
+    var request = new XMLHttpRequest();
+    request.open(type, url, true);
+    request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+            var data = JSON.parse(request.responseText);
+            try {success(data);} catch(e) {}
+        } else {
+            console.log(request)
+            try {error(request);} catch(e) {}
+        }
+    };
+    request.onerror = function() {
+        console.log(request)
+        try {error(request);} catch(e) {}
+    };
+    if(type == 'POST') {
+        request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        request.send(JSON.stringify(data));
+    } else {
+        request.send();
+    }
+}
 
 
 //google sign in
@@ -114,21 +150,17 @@ function onGoogleSignIn(googleUser) {
     var id_token = googleUser.getAuthResponse().id_token;
 
     //validate the id token
-    var xhrInfo = new XMLHttpRequest();
-    xhrInfo.open('GET','https://www.googleapis.com/oauth2/v3/tokeninfo?id_token='+id_token);
-    xhrInfo.onload = function() {
-        var res = JSON.parse(xhrInfo.responseText);
-        if(res.aud == '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com') {
+    U.ajax('POST', '/signin', function(data) {
+        if(data.googleId) {
             //all set, save token
-            profile.token = id_token;
+            profile.googleId = data.googleId;
             appStore.signedIn(profile);
         } else {
             //no good, sign out
             var auth2 = gapi.auth2.getAuthInstance();
             auth2.signOut();
         }
-    }
-    xhrInfo.send();
+    }, {token: id_token});
 }
 
 
