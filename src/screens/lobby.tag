@@ -66,6 +66,7 @@
 
         createRoom(e) {
             if(self.newRoomName.length > 3) {
+                //check if room name exists
                 RiotControl.trigger('lobby.create_room', {name: self.newRoomName, open: self.priv})
                 self.showCreate = false
                 self.newRoomName = ''

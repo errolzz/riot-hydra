@@ -41,7 +41,7 @@
                 U.ajax('GET', '/api/checkname/' + encodeURIComponent(self.user.name), function(data) {
                     if(!data.name) {
                         //name is valid and available, create user
-                        RiotControl.trigger('login.createNewUser', self.user)
+                        RiotControl.trigger('login.create_user', self.user)
                     } else {
                         //name is not available
                         self.error = 'That username is already in use'

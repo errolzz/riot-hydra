@@ -58,7 +58,11 @@ var server = app.listen(8000, function () {
     //create a room
     app.post('/api/rooms', function (req, res) {
         var room = new Room({
-            name: req.body.name
+            name:           req.body.name,
+            nameLower:      req.body.name.toLowerCase(),
+            open:           req.body.open,
+            audience:       req.body.audience,
+            djs:            req.body.djs
         });
         room.save(function (err) {
             if (!err) {
@@ -70,17 +74,36 @@ var server = app.listen(8000, function () {
         return res.send(room);
     });
 
-    //delete a room
-    app.delete('/api/rooms/:id', function (req, res) {
+    //update a rooms users
+    app.put('/api/roomusers/:id', function (req, res) {
         return Room.findById(req.params.id, function (err, room) {
-            return room.remove(function (err) {
-                if (!err) {
-                    console.log('removed');
-                    return res.send('');
-                } else {
-                    console.log(err);
-                }
-            });
+
+            //update room aud and djs
+            room.audience =     req.body.audience;
+            room.djs =          req.body.djs;
+
+            if(room.audience.length + room.djs.length == 0) {
+                //if room is now empty, delete it
+                return room.remove(function (err) {
+                    if (!err) {
+                        console.log('removed');
+                        return res.send({removed: true});
+                    } else {
+                        console.log(err);
+                    }
+                });
+            } else {
+                //save room with updated users
+                return room.save(function (err) {
+                    if (!err) {
+                        console.log('updated')
+                        return res.send(room);
+                    } else {
+                        console.log(err);
+                    }
+                    return res.send(room);
+                });
+            }
         });
     });
 
@@ -108,9 +131,8 @@ var server = app.listen(8000, function () {
 
     //get a user by name
     app.get('/api/checkname/:name', function (req, res) {
-        console.log('looking for ' + req.params.name.toLowerCase());
-        return User.findOne({nameLower: req.params.name.toLowerCase()}, function (err, user) {
-            console.log(user)
+        var ln = decodeURIComponent(req.params.name).toLowerCase();
+        return User.findOne({nameLower: ln}, function (err, user) {
             user = user || {name: null};
             if (!err) {
                 return res.send(user);
@@ -124,9 +146,9 @@ var server = app.listen(8000, function () {
     app.post('/api/users', function (req, res) {
         
         var user = new User({
-            googleId: req.body.googleId,
-            name: decodeURIComponent(req.body.name),
-            nameLower: decodeURIComponent(req.body.name).toLowerCase()
+            googleId:   req.body.googleId,
+            name:       req.body.name,
+            nameLower:  req.body.name.toLowerCase()
         });
         
         user.save(function (err) {
@@ -157,13 +179,16 @@ mongoose.connect('mongodb://localhost/hydra', options); //DEV
 
 
 var userSchema = mongoose.Schema({
-    googleId: {type: String, unique: true, required: true},
-    name: {type: String, unique: true, required: true},
-    nameLower: {type: String, unique: true, required: true}
+    googleId:   {type: String, unique: true, required: true},
+    name:       {type: String, unique: true, required: true},
+    nameLower:  {type: String, unique: true, required: true}
 });
 
 var roomSchema = mongoose.Schema({
-    name: {type: String, unique: true, required: true}
+    name:       {type: String, unique: true, required: true},
+    open:       {type: Boolean, required: true},
+    audience:   {type: Array, required: true},
+    djs:        {type: Array}
 });
 
 var User = mongoose.model('User', userSchema);
@@ -176,6 +201,41 @@ db.once('open', function() {
     console.log('connected to db')
     //mostly for testing
     //manually create modles here
+
+    var r1 = new Room({
+        name: 'Nefarious Incantations of Mindrot',
+        open: true,
+        audience: [
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+        ],
+        djs: [
+            {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
+        ]
+    });
+    var r2 = new Room({
+        name: 'Negligent Torture',
+        open: true,
+        audience: [
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+        ],
+        djs: [
+            {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
+        ]
+    });
+    var r3 = new Room({
+        name: 'FATSS',
+        open: true,
+        audience: [
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+        ],
+        djs: [
+            {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
+        ]
+    });
+
+    r1.save(function(err) {});
+    r2.save(function(err) {});
+    r3.save(function(err) {});
 });
 
 /*

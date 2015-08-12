@@ -4,8 +4,6 @@ function AppStore() {
     riot.observable(this)
 
     var self = this;
-    self.rooms = API.rooms;
-    self.users = API.users;
     self.user = undefined;
 
     self.signedIn = function(profile) {
@@ -45,18 +43,23 @@ function AppStore() {
         riot.route(function(collection, id, action) {
             if(collection == 'lobby') {
                 self.trigger('screen_changed', 'lobby');
-                self.trigger('rooms_loaded', self.user, self.rooms);
+                //GET rooms here
+                U.ajax('GET', '/api/rooms', function(rooms) {
+                    self.trigger('rooms_loaded', self.user, rooms);
+                });
             } else if(collection == 'room') {
-                var room = U.getOne('id', id, self.rooms);
-                self.trigger('screen_changed', 'room');
-                self.trigger('render_room', self.user, room);
+                U.ajax('GET', '/api/rooms', function(rooms) {
+                    var room = U.getOne('_id', id, rooms);
+                    self.trigger('screen_changed', 'room');
+                    self.trigger('render_room', self.user, room);
+                });
             }
         });
     })
 
 
     //LOGIN
-    self.on('login.createNewUser', function(user) {
+    self.on('login.create_user', function(user) {
         //post new user
         U.ajax('POST', '/api/users', function(data) {
             if(data.googleId) {
@@ -70,40 +73,34 @@ function AppStore() {
 
     //LOBBY
     self.on('lobby.enter_room', function(room) {
-        riot.route('room/' + room.id);
+        riot.route('room/' + room._id);
     });
 
     //when a new room is created
     self.on('lobby.create_room', function(roomData) {
-        var room = {
-            id: self.rooms.length,
+        var newRoom = {
             name: roomData.name,
             open: roomData.open,
             audience: [self.user],
             djs: []
         };
-        self.rooms.push(room);
-        self.trigger('room_added', room);
+        U.ajax('POST', '/api/rooms', function(room) {
+            self.trigger('room_added', room);
+        }, newRoom);
     });
 
 
     //ROOM
     self.on('room.left_room', function(room) {
-        //remove user from room
-        U.removeOne('id', self.user.id, room.audience);
-        U.removeOne('id', self.user.id, room.djs);
+        //remove user from local room object
+        U.removeOne('_id', self.user._id, room.audience);
+        U.removeOne('_id', self.user._id, room.djs);
 
-        //check if room is empty
-        //3 second delay
-        setTimeout(function() {
-            if(room.audience.length + room.djs.length == 0) {
-                //if empty, delete room
-                U.removeOne('id', room.id, self.rooms);
-            }
-        }, 3000);
-
-        //user left room
-        riot.route('lobby')
+        //update room in db with new audience and djs
+        U.ajax('PUT', '/api/roomusers/' + room._id, function(removed) {
+            //user left room
+            riot.route('lobby');
+        }, {audience: room.audience, djs: room.djs});
     });
 }
 
@@ -140,7 +137,7 @@ U.ajax = function(type, url, success, data, error) {
         console.log(request)
         try {error(request);} catch(e) {}
     };
-    if(type == 'POST') {
+    if(type == 'POST' || type == 'PUT') {
         request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
         request.send(JSON.stringify(data));
     } else {
