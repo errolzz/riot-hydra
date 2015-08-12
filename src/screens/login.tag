@@ -9,7 +9,7 @@
 
         <div class="wizard">
             <p>Welcome {firstname}, enter a username</p>
-            <input type="text" placeholder="username" onkeyup={nameChanged}>
+            <input type="text" placeholder="username" onkeyup={nameChanged} maxlength="12">
             <button onclick={enter}>Enter</button>
 
             <p class="error" show={error}>{error}</p>
@@ -29,16 +29,29 @@
         })
 
         nameChanged(e) {
-            self.user.name = e.target.value
+            //update username as user types
+            //trim whitespace
+            self.user.name = e.target.value.trim();
         }
 
         enter(e) {
             //if long enough name
-            if(self.user.name.length > 3) {
+            if(self.user.name.length > 1) {
                 //check if already in use
-                RiotControl.trigger('login.createNewUser', self.user)
+                U.ajax('GET', '/api/checkname/' + encodeURIComponent(self.user.name), function(data) {
+                    if(!data.name) {
+                        //name is valid and available, create user
+                        RiotControl.trigger('login.createNewUser', self.user)
+                    } else {
+                        //name is not available
+                        self.error = 'That username is already in use'
+                        self.update();
+                    }
+                });
             } else {
-                self.error = 'Username must be at least 4 characters long'
+                //name is not valid
+                self.error = 'Username must be at least 2 characters long'
+                self.update();
             }
         }
 

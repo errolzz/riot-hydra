@@ -13,7 +13,7 @@ function AppStore() {
 
         U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
             //if no user was found
-            if(data.googleId == 'none') {
+            if(!data.googleId) {
                 //new user temp object
                 var firstname = profile.getName().substring(0, profile.getName().indexOf(' '));
                 var u = {
@@ -22,8 +22,6 @@ function AppStore() {
                     img: profile.getImageUrl()
                 };
                 self.trigger('new_user', {user: u, firstname: firstname});
-
-                //make sure they are on the login page if not logged in?
             } else {
                 self.user = data;
                 //save the users avatar img, it's not saved in the db

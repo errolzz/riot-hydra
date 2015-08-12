@@ -94,10 +94,24 @@ var server = app.listen(8000, function () {
         });
     });
 
-    //get a user
+    //get a user by googleid
     app.get('/api/users/:googleid', function (req, res) {
         return User.findOne({googleId: req.params.googleid}, function (err, user) {
-            user = user || {googleId: 'none'};
+            user = user || {googleId: null};
+            if (!err) {
+                return res.send(user);
+            } else {
+                return console.log(err);
+            }
+        });
+    });
+
+    //get a user by name
+    app.get('/api/checkname/:name', function (req, res) {
+        console.log('looking for ' + req.params.name.toLowerCase());
+        return User.findOne({nameLower: req.params.name.toLowerCase()}, function (err, user) {
+            console.log(user)
+            user = user || {name: null};
             if (!err) {
                 return res.send(user);
             } else {
@@ -111,7 +125,8 @@ var server = app.listen(8000, function () {
         
         var user = new User({
             googleId: req.body.googleId,
-            name: req.body.name
+            name: decodeURIComponent(req.body.name),
+            nameLower: decodeURIComponent(req.body.name).toLowerCase()
         });
         
         user.save(function (err) {
@@ -143,7 +158,8 @@ mongoose.connect('mongodb://localhost/hydra', options); //DEV
 
 var userSchema = mongoose.Schema({
     googleId: {type: String, unique: true, required: true},
-    name: {type: String, unique: true, required: true}
+    name: {type: String, unique: true, required: true},
+    nameLower: {type: String, unique: true, required: true}
 });
 
 var roomSchema = mongoose.Schema({
@@ -157,8 +173,9 @@ var Room = mongoose.model('Room', roomSchema);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
-   //need this?
-   console.log('connected to db')
+    console.log('connected to db')
+    //mostly for testing
+    //manually create modles here
 });
 
 /*

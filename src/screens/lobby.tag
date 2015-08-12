@@ -45,7 +45,7 @@
         })
 
         RiotControl.on('update_lobby', function(rooms) {
-            
+
         })
 
         nameChange(e) {
@@ -78,7 +78,6 @@
         RiotControl.on('rooms_loaded', function(user, rooms) {
             self.user = user
             self.rooms = rooms
-            console.log(self.user)
             self.update()
         })
 
