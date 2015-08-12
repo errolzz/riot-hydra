@@ -14,7 +14,7 @@
                 <li each={ rooms }>
                     <div class="room-label" onclick={parent.roomClick}>
                         <p class="name">{name}</p>
-                        <p class="count">(33 Listeners)</p>
+                        <p class="count">({djs.length + audience.length} Listeners)</p>
                     </div>
                 </li>
             </ul>
@@ -25,7 +25,7 @@
             <p class="error" show={error}>{error}</p>
 
             <p class="private-label">Make it a private room?</p>
-            <div class="private"><input type="checkbox" value="private" onclick={togglePriv}> yes</div>
+            <div class="private"><input type="checkbox" value="private" onclick={togglePrivateRoom}> yes</div>
 
             <p class="cancel-btn" onclick={closeCreate}>Cancel</p>
             <button class="create-btn" type="button" onclick={createRoom}>Create</button>
@@ -35,7 +35,7 @@
     <script>
         var self = this
         self.newRoomName = ''
-        self.priv = false 
+        self.privateRoom = false 
 
         self.on('mount', function() {
             // Trigger init event when component is mounted to page.
@@ -52,8 +52,8 @@
             self.newRoomName = e.target.value
         }
 
-        togglePriv(e) {
-            self.priv = !self.priv
+        togglePrivateRoom(e) {
+            self.privateRoom = !self.privateRoom
         }
 
         openCreate(e) {
@@ -65,13 +65,23 @@
         }
 
         createRoom(e) {
-            if(self.newRoomName.length > 3) {
+            if(self.newRoomName.trim().length > 3) {
                 //check if room name exists
-                RiotControl.trigger('lobby.create_room', {name: self.newRoomName, open: self.priv})
-                self.showCreate = false
-                self.newRoomName = ''
+                U.ajax('GET', '/api/checkroomname/' + encodeURIComponent(self.newRoomName.trim()), function(data) {
+                    if(!data.name) {
+                        //name is valid and available, create user
+                        RiotControl.trigger('lobby.create_room', {name: self.newRoomName, privateRoom: self.privateRoom})
+                        self.showCreate = false
+                        self.newRoomName = ''
+                    } else {
+                        //name is not available
+                        self.error = 'That room name is already in use'
+                        self.update();
+                    }
+                });
             } else {
-                self.error = 'Room names must be at least 4 characters long.'
+                self.error = 'Room names must be at least 4 characters long'
+                self.update();
             }
         }
 

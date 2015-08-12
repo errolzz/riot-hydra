@@ -77,7 +77,7 @@
             self.user = user
             self.room = room
             self.update()
-        });
+        })
 
         leaveRoom(e) {
             RiotControl.trigger('room.left_room', self.room)

@@ -31,14 +31,14 @@
         nameChanged(e) {
             //update username as user types
             //trim whitespace
-            self.user.name = e.target.value.trim();
+            self.user.name = e.target.value;
         }
 
         enter(e) {
             //if long enough name
-            if(self.user.name.length > 1) {
+            if(self.user.name.trim().length > 1) {
                 //check if already in use
-                U.ajax('GET', '/api/checkname/' + encodeURIComponent(self.user.name), function(data) {
+                U.ajax('GET', '/api/checkname/' + encodeURIComponent(self.user.name.trim()), function(data) {
                     if(!data.name) {
                         //name is valid and available, create user
                         RiotControl.trigger('login.create_user', self.user)

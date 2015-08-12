@@ -40,18 +40,24 @@ function AppStore() {
 
     //APP / ROUTER
     self.on('app.app_mounted', function() {
-        riot.route(function(collection, id, action) {
-            if(collection == 'lobby') {
+        riot.route(function(p1, p2, p3) {
+
+            if(p1 == 'lobby') {
                 self.trigger('screen_changed', 'lobby');
                 //GET rooms here
                 U.ajax('GET', '/api/rooms', function(rooms) {
                     self.trigger('rooms_loaded', self.user, rooms);
                 });
-            } else if(collection == 'room') {
+
+            } else if(p1 == 'room') {
                 U.ajax('GET', '/api/rooms', function(rooms) {
-                    var room = U.getOne('_id', id, rooms);
-                    self.trigger('screen_changed', 'room');
-                    self.trigger('render_room', self.user, room);
+                    var room = U.getOne('_id', p2, rooms);
+                    if(room) {
+                        self.trigger('screen_changed', 'room');
+                        self.trigger('render_room', self.user, room);
+                    } else {
+                        riot.route('lobby');
+                    }
                 });
             }
         });
@@ -73,14 +79,18 @@ function AppStore() {
 
     //LOBBY
     self.on('lobby.enter_room', function(room) {
-        riot.route('room/' + room._id);
+        //update room in db with new audience and djs
+        U.ajax('PUT', '/api/roomusers/' + room._id, function(addedUserToRoom) {
+            //user left room
+            riot.route('room/' + room._id);
+        }, {audience: room.audience});
     });
 
     //when a new room is created
     self.on('lobby.create_room', function(roomData) {
         var newRoom = {
             name: roomData.name,
-            open: roomData.open,
+            privateRoom: roomData.privateRoom,
             audience: [self.user],
             djs: []
         };
@@ -95,9 +105,9 @@ function AppStore() {
         //remove user from local room object
         U.removeOne('_id', self.user._id, room.audience);
         U.removeOne('_id', self.user._id, room.djs);
-
+        
         //update room in db with new audience and djs
-        U.ajax('PUT', '/api/roomusers/' + room._id, function(removed) {
+        U.ajax('PUT', '/api/roomusers/' + room._id, function(removedUserFromRoom) {
             //user left room
             riot.route('lobby');
         }, {audience: room.audience, djs: room.djs});

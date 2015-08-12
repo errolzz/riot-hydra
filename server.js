@@ -55,15 +55,29 @@ var server = app.listen(8000, function () {
         
     });
 
+    //get a user by name
+    app.get('/api/checkroomname/:name', function (req, res) {
+        var ln = decodeURIComponent(req.params.name).toLowerCase();
+        return Room.findOne({nameLower: ln}, function (err, room) {
+            room = room || {name: null};
+            if (!err) {
+                return res.send(room);
+            } else {
+                return console.log(err);
+            }
+        });
+    });
+
     //create a room
     app.post('/api/rooms', function (req, res) {
         var room = new Room({
-            name:           req.body.name,
-            nameLower:      req.body.name.toLowerCase(),
-            open:           req.body.open,
+            name:           req.body.name.trim(),
+            nameLower:      req.body.name.trim().toLowerCase(),
+            privateRoom:    req.body.privateRoom,
             audience:       req.body.audience,
             djs:            req.body.djs
         });
+        
         room.save(function (err) {
             if (!err) {
                 return console.log('created');
@@ -78,10 +92,17 @@ var server = app.listen(8000, function () {
     app.put('/api/roomusers/:id', function (req, res) {
         return Room.findById(req.params.id, function (err, room) {
 
-            //update room aud and djs
-            room.audience =     req.body.audience;
-            room.djs =          req.body.djs;
+            //update room audience
+            if(req.body.audience) {
+                room.audience = req.body.audience;
+            }
 
+            //update room djs
+            if(req.body.djs) {
+                room.djs = req.body.djs;
+            }
+
+            console.log('users: ' + room.audience.length + room.djs.length)
             if(room.audience.length + room.djs.length == 0) {
                 //if room is now empty, delete it
                 return room.remove(function (err) {
@@ -96,23 +117,13 @@ var server = app.listen(8000, function () {
                 //save room with updated users
                 return room.save(function (err) {
                     if (!err) {
-                        console.log('updated')
+                        console.log('updated room')
                         return res.send(room);
                     } else {
                         console.log(err);
                     }
                     return res.send(room);
                 });
-            }
-        });
-    });
-
-    app.get('/api/users', function (req, res) {
-        return User.find(function (err, users) {
-            if (!err) {
-                return res.send(users);
-            } else {
-                return console.log(err);
             }
         });
     });
@@ -147,8 +158,8 @@ var server = app.listen(8000, function () {
         
         var user = new User({
             googleId:   req.body.googleId,
-            name:       req.body.name,
-            nameLower:  req.body.name.toLowerCase()
+            name:       req.body.name.trim(),
+            nameLower:  req.body.name.trim().toLowerCase()
         });
         
         user.save(function (err) {
@@ -164,6 +175,7 @@ var server = app.listen(8000, function () {
     console.log('Example app listening at http://%s:%s', host, port);
 });
 
+
 //ROUTES
 app.get('/', function (req, res) {
     res.render('index');
@@ -175,36 +187,50 @@ app.get('/', function (req, res) {
 var mongoose = require('mongoose');
 var options = { server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }, 
                 replset: { socketOptions: { keepAlive: 1, connectTimeoutMS : 30000 } } };
+
+//set up database connection
 mongoose.connect('mongodb://localhost/hydra', options); //DEV
 
-
+//define Users
 var userSchema = mongoose.Schema({
     googleId:   {type: String, unique: true, required: true},
     name:       {type: String, unique: true, required: true},
     nameLower:  {type: String, unique: true, required: true}
 });
 
+//define Rooms
 var roomSchema = mongoose.Schema({
-    name:       {type: String, unique: true, required: true},
-    open:       {type: Boolean, required: true},
-    audience:   {type: Array, required: true},
-    djs:        {type: Array}
+    name:           {type: String, unique: true, required: true},
+    nameLower:      {type: String, unique: true, required: true},
+    privateRoom:    {type: Boolean, required: true},
+    audience:       {type: Array, required: true},
+    djs:            {type: Array}
 });
 
+//init models
 var User = mongoose.model('User', userSchema);
 var Room = mongoose.model('Room', roomSchema);
 
-
+//create database connection
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
-    console.log('connected to db')
+    console.log('connected to db');
     //mostly for testing
     //manually create modles here
 
+    var u1 = new User({
+        googleId: '1232423434',
+        name: 'TIM the !',
+        nameLower: 'tim the !'
+    });
+    u1.save(function(err) {console.log('created')});
+
+
     var r1 = new Room({
-        name: 'Nefarious Incantations of Mindrot',
-        open: true,
+        name: 'Mindrot',
+        nameLower: 'mindrot',
+        privateRoom: false,
         audience: [
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
@@ -213,8 +239,9 @@ db.once('open', function() {
         ]
     });
     var r2 = new Room({
-        name: 'Negligent Torture',
-        open: true,
+        name: 'Torture',
+        nameLower: 'torture',
+        privateRoom: false,
         audience: [
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
@@ -224,7 +251,8 @@ db.once('open', function() {
     });
     var r3 = new Room({
         name: 'FATSS',
-        open: true,
+        nameLower: 'fatss',
+        privateRoom: false,
         audience: [
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
@@ -232,10 +260,9 @@ db.once('open', function() {
             {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
         ]
     });
-
-    r1.save(function(err) {});
-    r2.save(function(err) {});
-    r3.save(function(err) {});
+    r1.save(function(err) {console.log('created')});
+    r2.save(function(err) {console.log('created')});
+    r3.save(function(err) {console.log('created')});
 });
 
 /*
