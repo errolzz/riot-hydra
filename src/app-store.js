@@ -10,6 +10,7 @@ function AppStore() {
 
     self.signedIn = function(profile) {
         //check if user has been here before
+
         U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
             //if no user was found
             if(data.googleId == 'none') {
@@ -22,14 +23,14 @@ function AppStore() {
                 };
                 self.trigger('new_user', {user: u, firstname: firstname});
 
-                //make sure they are on the login page if not logged in
-                window.location = '/';
+                //make sure they are on the login page if not logged in?
             } else {
                 self.user = data;
                 //save the users avatar img, it's not saved in the db
                 self.user.img = profile.getImageUrl();
                 
                 var url = String(window.location.hash).substring(1);
+                
                 if(url.length == 0 || url == '#') {
                     riot.route('lobby');
                 } else {
@@ -95,10 +96,13 @@ function AppStore() {
         U.removeOne('id', self.user.id, room.djs);
 
         //check if room is empty
-        if(room.audience.length + room.djs.length == 0) {
-            //if empty, delete room
-            U.removeOne('id', room.id, self.rooms);
-        }
+        //3 second delay
+        setTimeout(function() {
+            if(room.audience.length + room.djs.length == 0) {
+                //if empty, delete room
+                U.removeOne('id', room.id, self.rooms);
+            }
+        }, 3000);
 
         //user left room
         riot.route('lobby')
