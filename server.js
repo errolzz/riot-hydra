@@ -52,7 +52,14 @@ var server = app.listen(8000, function () {
 
     //get a room
     app.get('/api/rooms/:id', function (req, res) {
-        
+        return Room.findOne({_id: req.params.id}, function (err, room) {
+            room = room || {_id: null};
+            if (!err) {
+                return res.send(room);
+            } else {
+                return console.log(err);
+            }
+        });
     });
 
     //get a user by name
@@ -102,7 +109,6 @@ var server = app.listen(8000, function () {
                 room.djs = req.body.djs;
             }
 
-            console.log('users: ' + room.audience.length + room.djs.length)
             if(room.audience.length + room.djs.length == 0) {
                 //if room is now empty, delete it
                 return room.remove(function (err) {

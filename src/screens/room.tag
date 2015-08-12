@@ -54,17 +54,8 @@
                 </div>
             </div>
             <div class="audience">
-                <div class="avatar">
-                    <p class="avatar-name">DJ Fonky Family</p>
-                </div>
-                <div class="avatar">
-                    <p class="avatar-name">DJ Fonky Family</p>
-                </div>
-                <div class="avatar">
-                    <p class="avatar-name">DJ Fonky Family</p>
-                </div>
-                <div class="avatar">
-                    <p class="avatar-name">DJ Fonky Family</p>
+                <div each={room.audience} class="avatar">
+                    <p class="avatar-name">{name}</p>
                 </div>
             </div>
             <h2 class="logo">hydra.fm</h2>
@@ -76,6 +67,7 @@
         RiotControl.on('render_room', function(user, room) {
             self.user = user
             self.room = room
+            //console.log(self.room)
             self.update()
         })
 

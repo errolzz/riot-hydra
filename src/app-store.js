@@ -43,6 +43,8 @@ function AppStore() {
         riot.route(function(p1, p2, p3) {
 
             if(p1 == 'lobby') {
+                //ENTER THE LOBBY
+                
                 self.trigger('screen_changed', 'lobby');
                 //GET rooms here
                 U.ajax('GET', '/api/rooms', function(rooms) {
@@ -50,18 +52,28 @@ function AppStore() {
                 });
 
             } else if(p1 == 'room') {
-                U.ajax('GET', '/api/rooms', function(rooms) {
-                    var room = U.getOne('_id', p2, rooms);
-                    if(room) {
-                        self.trigger('screen_changed', 'room');
-                        self.trigger('render_room', self.user, room);
+                //ENTER A ROOM
+
+                //get latest list of rooms
+                U.ajax('GET', '/api/rooms/' + p2, function(room) {
+                    //if room is valid
+                    if(room._id) {
+                        //add user to room
+                        room.audience.push(self.user);
+                        //update room in db with new audience and djs
+                        U.ajax('PUT', '/api/roomusers/' + room._id, function(updatedRoom) {
+                            //user left room
+                            self.trigger('screen_changed', 'room');
+                            self.trigger('render_room', self.user, updatedRoom);
+                        }, {audience: room.audience});
                     } else {
+                        //invalid room id, go back to lobby
                         riot.route('lobby');
                     }
                 });
             }
         });
-    })
+    });
 
 
     //LOGIN
@@ -79,11 +91,7 @@ function AppStore() {
 
     //LOBBY
     self.on('lobby.enter_room', function(room) {
-        //update room in db with new audience and djs
-        U.ajax('PUT', '/api/roomusers/' + room._id, function(addedUserToRoom) {
-            //user left room
-            riot.route('room/' + room._id);
-        }, {audience: room.audience});
+        riot.route('room/' + room._id);
     });
 
     //when a new room is created
@@ -91,7 +99,7 @@ function AppStore() {
         var newRoom = {
             name: roomData.name,
             privateRoom: roomData.privateRoom,
-            audience: [self.user],
+            audience: [],
             djs: []
         };
         U.ajax('POST', '/api/rooms', function(room) {
