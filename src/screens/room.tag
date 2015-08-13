@@ -1,15 +1,29 @@
 <room>
     <section>
         <div class="sidebar">
-            <input class="search" type="text" placeholder="search music">
-            <div class="container">
+            <input class="search" onkeyup={searchChanged} type="text" placeholder="search music" value={query}>
+
+            <div class="search-results {searching?'searching':''}">
+                <p class="search-close" onclick={closeSearch}>Back to room</p>
+                <p class="results-header"><span class="query">{query}</span> search results</p>
+                <ul class="results-holder">
+                    <li class="result" each={searchResults}>
+                        <img src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
+                        <p class="title">{snippet.title}</p>
+                        <!-- <p class="add" onclick={addToPlaylist}>+ Add to playlist</p> -->
+                    </li>
+                </ul>
+            </div>
+
+            <div class="container {selectingList?'list-open':''}">
                 <div class="dropdown">
-                    <div class="selected">
-                        <p>Gansta 1999 List</p>
+                    <div class="selected" onclick={openPlaylists}>
+                        <p>{currentList.snippet.title}</p>
                     </div>
                     <div class="options">
                         <ul>
-                            <li>List Numba One</li>
+                            <li onclick={closePlaylists}>Select a playlist</li>
+                            <li each={playlists}>{snippet.title}</li>
                             <li class="new-list">+ Create New List</li>
                         </ul>
                     </div>
@@ -65,10 +79,23 @@
 
     <script>
         var self = this;
+
         RiotControl.on('render_room', function(user, room) {
             self.user = user
             self.room = room
             self.update()
+
+            //get users playlists
+            var listUrl = 'https://www.googleapis.com/youtube/v3/playlists';
+            listUrl += '?mine=true&part=snippet&access_token=' + U.getCookie('access_token');
+
+            U.ajax('GET', listUrl, function(data) {
+                self.currentList = data.items[0]
+                self.playlists = data.items
+                self.update();
+            })
+
+            //auto select first playlist
 
             //load audience avatars
             for(var i=0, l=room.audience.length; i<l; i++) {
@@ -86,6 +113,66 @@
                 })
             }
         })
+
+        openPlaylists(e) {
+            self.selectingList = true
+        }
+
+        closePlaylists(e) {
+            self.selectingList = false
+        }
+
+        searchChanged(e) {
+            if(e.keyCode == 27) {
+                //hit escape key, kill search
+                self.closeSearch()
+            } else {
+                //set up query to be searched
+                self.query = e.target.value
+
+                if(self.query.trim().length > 0) {
+                    //if value in field, call search
+                    self.searching = true
+                    self.search()
+                } else {
+                    //if no value, close search
+                    self.closeSearch()
+                }
+            }
+        }
+
+        search() {
+            //set up query
+            var q = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video'
+            q += '&videoCategoryId=10&maxResults=20&key=AIzaSyBRzzVaMuLFIKLA2MAcbmEWVbx5JWXmxSE&q='
+            q += encodeURIComponent(self.query)
+
+            //set search on delay timer
+            try {
+                window.clearTimeout(searchTimer)
+            } catch(e) {
+                //no time to clear
+            }
+
+            searchTimer = window.setTimeout(function() {
+                U.ajax('GET', q, function(data) {
+                    self.searchResults = data.items
+                    self.update()
+                })
+            }, 666)
+        }
+
+        closeSearch(e) {
+            self.query = ''
+            self.searching = false
+            window.clearTimeout(searchTimer)
+            self.searchResults = []
+        }
+
+        addToPlaylist(e) {
+            console.log(e.item);
+            //add to self.currentList
+        }
 
         leaveRoom(e) {
             RiotControl.trigger('room.left_room', self.room)

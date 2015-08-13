@@ -7,8 +7,14 @@ function AppStore() {
     self.user = undefined;
 
     self.signedIn = function(profile) {
-        //check if user has been here before
+        
+        if(!U.getCookie('access_token').length) {
+            authYoutube();
+        } else {
+            console.log('already authed');
+        }
 
+        //check if user has been here before
         U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
             //if no user was found
             if(!data.googleId) {
@@ -148,6 +154,16 @@ U.removeOne = function(prop, value, list) {
         }
     }
 }
+U.getCookie = function(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+    }
+    return "";
+}
 U.ajax = function(type, url, success, data, error) {
     var request = new XMLHttpRequest();
     request.open(type, url, true);
@@ -192,6 +208,10 @@ function onGoogleSignIn(googleUser) {
             auth2.signOut();
         }
     }, {token: id_token});
+}
+
+function authYoutube() {
+    window.location = 'https://accounts.google.com/o/oauth2/auth?client_id=325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com&redirect_uri=http://localhost:8000/oauth2callback&response_type=token&scope=https://www.googleapis.com/auth/youtube';
 }
 
 //gets a users google avatar

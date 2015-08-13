@@ -30,7 +30,6 @@
 
         nameChanged(e) {
             //update username as user types
-            //trim whitespace
             self.user.name = e.target.value;
         }
 

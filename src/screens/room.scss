@@ -49,11 +49,95 @@ room {
         .search {
             @include text-field();
             margin: 0 0 30px;
+            width: 25%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .search-results {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            z-index: 90;
+            padding: 0 13px 13px;
+
+            &.searching {
+                display: block;
+                background: $gray-dark;
+            }
+
+            .search-close {
+                @include action-text();
+                position: fixed;
+                font-size: $med-font;
+                z-index: 100;
+                top: 70px;
+                left: 13px;
+            }
+
+            .results-header {
+                position: fixed;
+                font-size: $med-font;
+                top: 70px;
+                right: 13px;
+                .query {
+                    color: $highlight;
+                }
+            }
+
+            .results-holder {
+                @include flexbox();
+                flex-wrap: wrap;
+                margin: 110px -7px;
+                height: calc(100% - 110px);
+                overflow-y: scroll;
+                padding-bottom: 50px;
+            }
+
+            .result {
+                padding: 0 7px;
+                margin-bottom: 26px;
+                width: 20%;
+
+                img {
+                    display: block;
+                    margin-bottom: 13px;
+                }
+                .title {
+                    color: $white;
+                    margin-bottom: 10px;
+                }
+                .add {
+                    @include action-text();
+                }
+            }
         }
 
         .container {
+            margin-top: 72px;
             padding: 0 13px 13px;
+
+            &.list-open {
+                .dropdown {
+                    .selected {
+                        display: none;
+                    }
+                    .options {
+                        display: block;
+                        li {
+                            margin-bottom: 10px;
+                        }
+                    }
+                }
+                .tracks {
+                    display: none;
+                }
+            }
         }
 
         .dropdown {
@@ -65,11 +149,12 @@ room {
             }
             .options {
                 display: none;
-            }
-            &.open {
-                .options {
-                    display: block;
-                    margin-top: -30px;
+
+                li {
+                    @include action-text();
+                    &:first-child {
+                        color: $gray-light;
+                    }
                 }
             }
         }

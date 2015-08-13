@@ -1,0 +1,43 @@
+html
+    head
+        title hydra.fm
+        style.
+            body {
+                background: #161616;
+            }
+            #error {
+                display: none;
+            }
+    body
+        p(id="error") You must allow youtube access to use <a href='/'>hydra.fm</a>.
+
+        script.
+            var hash = String(window.location.hash).substring(1);
+
+            function ajax(type, url, success, data, error) {
+                var request = new XMLHttpRequest();
+                request.open(type, url, true);
+                request.onload = function() {
+                    if (request.status >= 200 && request.status < 400) {
+                        var data = JSON.parse(request.responseText);
+                        try {success(data);} catch(e) {}
+                    } else {
+                        try {error(request);} catch(e) {}
+                    }
+                };
+                request.onerror = function() {
+                    try {error(request);} catch(e) {}
+                };
+                request.send();
+            }
+
+            if(hash.indexOf('access_denied') > -1) {
+                document.getElementById('error').style.display = 'block';
+            } else {
+                ajax('GET', 'https://www.googleapis.com/oauth2/v1/tokeninfo?' + hash, function(data) {
+                    if(data.issued_to) {
+                        document.cookie = hash;
+                        window.location = '/';
+                    }
+                });
+            }

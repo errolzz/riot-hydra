@@ -127,14 +127,13 @@ button {
    color: darken($gray-light, 30%);
 }
 
-lobby section, room section {
-    height: 100%;
+@mixin flexbox() {
     display: -webkit-box;
     display: -moz-box;
     display: -ms-flexbox;
     display: -webkit-flex;
     display: flex;
-    -webkit-flex-flow: row;
+    -webkit-flex-flow: row;   
 }
 
 @mixin action-text() {
@@ -155,5 +154,8 @@ lobby section, room section {
 }
 
 
-
+lobby section, room section {
+    height: 100%;
+    @include flexbox();
+}
 

@@ -187,6 +187,9 @@ app.get('/', function (req, res) {
     res.render('index');
 });
 
+app.get('/oauth2callback', function(req, res) {
+    res.render('oauth2callback');
+})
 
 
 //DATABASE
@@ -209,7 +212,7 @@ var roomSchema = mongoose.Schema({
     name:           {type: String, unique: true, required: true},
     nameLower:      {type: String, unique: true, required: true},
     privateRoom:    {type: Boolean, required: true},
-    audience:       {type: Array, required: true},
+    audience:       {type: Array},
     djs:            {type: Array}
 });
 
