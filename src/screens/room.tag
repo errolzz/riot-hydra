@@ -10,7 +10,7 @@
                     <li class="result" each={searchResults}>
                         <img src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
                         <p class="title">{snippet.title}</p>
-                        <!-- <p class="add" onclick={addToPlaylist}>+ Add to playlist</p> -->
+                        <p class="add" onclick={addToPlaylist}>+ Add to playlist</p>
                     </li>
                 </ul>
             </div>
@@ -24,7 +24,7 @@
                         <ul>
                             <li onclick={closePlaylists}>Select a playlist</li>
                             <li each={playlists}>{snippet.title}</li>
-                            <li class="new-list">+ Create New List</li>
+                            <!-- <li class="new-list">+ Create New List</li> -->
                         </ul>
                     </div>
                 </div>
@@ -93,6 +93,9 @@
                 self.currentList = data.items[0]
                 self.playlists = data.items
                 self.update();
+            }, null, function(error) {
+                //if token has expired
+                
             })
 
             //auto select first playlist

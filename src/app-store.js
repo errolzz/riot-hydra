@@ -193,7 +193,6 @@ U.ajax = function(type, url, success, data, error) {
 function onGoogleSignIn(googleUser) {
     var profile = googleUser.getBasicProfile();
     var id_token = googleUser.getAuthResponse().id_token;
-
     document.getElementById('site').style.display = 'none';
 
     //validate the id token
@@ -212,6 +211,32 @@ function onGoogleSignIn(googleUser) {
 
 function authYoutube() {
     window.location = 'https://accounts.google.com/o/oauth2/auth?client_id=325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com&redirect_uri=http://localhost:8000/oauth2callback&response_type=token&scope=https://www.googleapis.com/auth/youtube';
+}
+
+function getNewAuthYoutube(refresh, callback) {
+    U.ajax('POST', 'https://www.googleapis.com/oauth2/v3/token', function(data) {
+        console.log(data);
+        //callback
+    }, {
+        code: oldAuth,
+        client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
+        client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi'
+        refresh_token: refresh,
+        grant_type: 'refresh_token'
+    });
+}
+
+function getYoutubeRefreshToken(oldAuth, callback) {
+    U.ajax('POST', 'https://www.googleapis.com/oauth2/v3/token', function(data) {
+        console.log(data);
+        //callback
+    }, {
+        code: oldAuth,
+        client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
+        client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi'
+        redirect_uri: 'http://localhost:8000',
+        grant_type: 'authorization_code'
+    });
 }
 
 //gets a users google avatar
