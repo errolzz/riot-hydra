@@ -271,12 +271,7 @@ db.once('open', function() {
     r3.save(function(err) {console.log('created')});
 });
 
-/*
-    mongo terminal
-    http://www.tutorialspoint.com/mongodb/mongodb_drop_collection.htm
-*/
 
-//api
 //video search
 //video sync
 //chat

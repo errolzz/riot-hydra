@@ -3,9 +3,15 @@ room {
         position: relative;
         width: 42px;
         height: 42px;
-        background: #fff;
         margin-right: 2px;
         float: left;
+
+        img {
+            opacity: 0.4;
+            &.full {
+                opacity: 1;
+            }
+        }
 
         .avatar-name {
             display: none;

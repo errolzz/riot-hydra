@@ -37,10 +37,10 @@
                     <img src="assets/img/chiddy-bang.jpg" alt="" width="100%" />
                 </div>
                 <div class="djs">
-                    <div class="avatar"><p class="avatar-name">Jess666</p></div>
-                    <div class="avatar playing"><p class="avatar-name">TinklerDeath</p></div>
-                    <div class="avatar"><p class="avatar-name">rouseyrondaa</p></div>
-                    <div class="avatar"><p class="avatar-name">fishmonger</p></div>
+                    <div each={room.djs} class="avatar">
+                        <img src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
+                        <p class="avatar-name">{name}</p>
+                    </div>
                     <div class="be-dj">
                         <div class="plus">
                             <div class="h"></div>
@@ -55,7 +55,7 @@
             </div>
             <div class="audience">
                 <div each={room.audience} class="avatar">
-                    <img src="{img}" width="42" height="42" alt="" />
+                    <img class={img?'full':''} src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
                     <p class="avatar-name">{name}</p>
                 </div>
             </div>
@@ -68,8 +68,23 @@
         RiotControl.on('render_room', function(user, room) {
             self.user = user
             self.room = room
-            //console.log(self.room)
             self.update()
+
+            //load audience avatars
+            for(var i=0, l=room.audience.length; i<l; i++) {
+                getGoogleAvatar(i, room.audience[i].googleId, function(index, img) {
+                    room.audience[index].img = img
+                    self.update()
+                })
+            }
+
+            //load dj avatars
+            for(var i=0, l=room.audience.length; i<l; i++) {
+                getGoogleAvatar(i, room.audience[i].googleId, function(index, img) {
+                    room.audience[index].img = img
+                    self.update()
+                })
+            }
         })
 
         leaveRoom(e) {

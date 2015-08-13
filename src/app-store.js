@@ -59,8 +59,16 @@ function AppStore() {
                 U.ajax('GET', '/api/rooms/' + p2, function(room) {
                     //if room is valid
                     if(room._id) {
-                        //add user to room
-                        room.audience.push(self.user);
+                        //check if user is already in room (refreshed)
+                        var isAud = U.getOne('_id', self.user._id, room.audience);
+                        var isDj = U.getOne('_id', self.user._id, room.djs)
+                        
+                        if(!isAud && !isDj) {
+                            //add user to room
+                            console.log('adding to room')
+                            room.audience.push(self.user);    
+                        }
+                        
                         //update room in db with new audience and djs
                         U.ajax('PUT', '/api/roomusers/' + room._id, function(updatedRoom) {
                             //user left room
@@ -187,19 +195,22 @@ function onGoogleSignIn(googleUser) {
 }
 
 //gets a users google avatar
-function getGoogleAvatar(googleId, callback) {
+function getGoogleAvatar(index, googleId, callback) {
     gapi.client.load('plus','v1', function() {
         var request = gapi.client.plus.people.get({
             'userId': googleId
         });
         request.execute(function(resp) {
-            var img = resp.image.url.replace('?sz=50', '?sz=100');
-            callback(img);
+            var img;
+            if(resp.image) {
+                if(!resp.image.isDefault) {
+                    img = resp.image.url.replace('?sz=50', '?sz=100');
+                }
+            }
+            callback(index, img);
         });
     });
 }
-
-
 
 
 
