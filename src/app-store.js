@@ -17,6 +17,7 @@ function AppStore() {
                 var u = {
                     googleId: profile.googleId,
                     name: '',
+                    nameLower: '',
                     img: profile.getImageUrl()
                 };
                 self.trigger('new_user', {user: u, firstname: firstname});
@@ -82,7 +83,7 @@ function AppStore() {
         U.ajax('POST', '/api/users', function(data) {
             if(data.googleId) {
                 //update local user
-                self.user = user;
+                self.user = data;
                 riot.route('lobby');
             }
         }, user);
@@ -183,6 +184,19 @@ function onGoogleSignIn(googleUser) {
             auth2.signOut();
         }
     }, {token: id_token});
+}
+
+//gets a users google avatar
+function getGoogleAvatar(googleId, callback) {
+    gapi.client.load('plus','v1', function() {
+        var request = gapi.client.plus.people.get({
+            'userId': googleId
+        });
+        request.execute(function(resp) {
+            var img = resp.image.url.replace('?sz=50', '?sz=100');
+            callback(img);
+        });
+    });
 }
 
 

@@ -55,6 +55,7 @@
             </div>
             <div class="audience">
                 <div each={room.audience} class="avatar">
+                    <img src="{img}" width="42" height="42" alt="" />
                     <p class="avatar-name">{name}</p>
                 </div>
             </div>
