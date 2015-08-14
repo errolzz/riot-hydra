@@ -1,5 +1,5 @@
 <login>
-    <section class={logged: loggedIn}>
+    <section class={view}>
         <h1>hydra.fm</h1>
 
         <div class="first">
@@ -10,30 +10,39 @@
         <div class="wizard">
             <p>Welcome {firstname}, enter a username</p>
             <input type="text" placeholder="username" onkeyup={nameChanged} maxlength="12">
-            <button onclick={enter}>Enter</button>
-
+            <button onclick={saveName}>Save</button>
             <p class="error" show={error}>{error}</p>
-            <p class="sign-out" onclick={signOut}>Sign Out</p>
+        </div>
+
+        <div class="auth-youtube">
+            <p>You must allow hydra.fm to access your YouTube playlists</p>
+            <button onclick={authYoutube}>Grant Access</button>
+            <p class="error" show={authError}>{authError}</p>
         </div>
     </section>
 
     <script>
         var self = this
-        self.loggedIn = false
+        self.view = 'sign-in'
 
         RiotControl.on('new_user', function(userInfo) {
             self.firstname = userInfo.firstname
             self.user = userInfo.user
-            self.loggedIn = true
+            self.view = 'choose-name'
+            self.update()
+        })
+
+        RiotControl.on('auth_youtube', function() {
+            self.view = 'authorize'
             self.update()
         })
 
         nameChanged(e) {
             //update username as user types
-            self.user.name = e.target.value;
+            self.user.name = e.target.value
         }
 
-        enter(e) {
+        saveName(e) {
             //if long enough name
             if(self.user.name.trim().length > 1) {
                 //check if already in use
@@ -53,11 +62,30 @@
                 self.update();
             }
         }
+        
+        //START HERE - need to set up logic so on page load it shows correct step
 
-        signOut(e) {
-            var auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut();
-            window.location = '/';
+        authYoutube(e) {
+            //allow app to get/manage users youtube data
+            //only called once per user
+            var url = 'https://accounts.google.com/o/oauth2/auth'
+            url += '?client_id=325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com'
+            url += '&redirect_uri=http://localhost:8000/oauth2callback'
+            url += '&response_type=token'
+            url += '&scope=https://www.googleapis.com/auth/youtube'
+
+            var win = window.open(url, 'width=500, height=500')
+
+            //listen for the access_token cookie
+            var accessTimer = setInterval(function() {
+                var c = U.getCookie('access_token');
+                if(c) {
+                    win.close();
+                    if(c == 'no') {
+                        self.authError = 'Authorizing didn\'t work... refresh and try again';
+                    }
+                }
+            }, 200);
         }
     </script>
 </login>

@@ -69,7 +69,7 @@
             </div>
             <div class="audience">
                 <div each={room.audience} class="avatar">
-                    <img class={img?'full':''} src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
+                    <img class={full: img} src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
                     <p class="avatar-name">{name}</p>
                 </div>
             </div>
@@ -95,7 +95,7 @@
                 self.update();
             }, null, function(error) {
                 //if token has expired
-                
+
             })
 
             //auto select first playlist

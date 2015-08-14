@@ -2,7 +2,7 @@
 //SERVER
 var express = require('express');
 var bparser = require('body-parser');
-var https = require('https');
+var request = require('request');
 var app = express();
 
 var server = app.listen(8000, function () {
@@ -17,15 +17,15 @@ var server = app.listen(8000, function () {
     app.use(express.static('./dist'));
 
 
-    //API
+    //USER STUFF
+
     //sign in
     app.post('/signin', function (req, res) {
         //verify token is valid
-        https.get('https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + req.body.token, function(response) {
-            //console.log("statusCode: ", res.statusCode);
-
-            response.on('data', function(d) {
-                var parsed = JSON.parse(d);
+        var url = 'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=' + req.body.token;
+        request(url, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                var parsed = JSON.parse(body);
                 //verify client id matches
                 if(parsed.aud == '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com') {
                     //send back unique google id
@@ -33,11 +33,58 @@ var server = app.listen(8000, function () {
                 } else {
                     res.send({googleId: null});
                 }
-            });
-        }).on('error', function(e) {
-            console.error(e);
+            }
         });
     });
+
+    //get a users refresh token for when their access_token expires
+    app.get('/getYoutubeRefreshToken', function(req, res) {
+        request({
+            url: 'https://www.googleapis.com/oauth2/v3/token',
+            method: 'POST',
+            json: {
+                code: oldAuth,
+                client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
+                client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi'
+                redirect_uri: 'http://localhost:8000',
+                grant_type: 'authorization_code'
+            }
+        }, function(error, response, body){
+            if(error) {
+                console.log(error);
+            } else {
+                console.log(response.statusCode, body);
+                var parsed = JSON.parse(body);
+            }
+        });
+    });
+
+
+    //when access_token expires, get a new one using the users refresh_token
+    app.get('/getNewAuthYoutube', function(req, res) {
+        request({
+            url: 'https://www.googleapis.com/oauth2/v3/token',
+            method: 'POST',
+            json: {
+                code: req.body.oldAuth,
+                client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
+                client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi',
+                refresh_token: req.body.refresh,
+                grant_type: 'refresh_token'
+            }
+        }, function(error, response, body){
+            if(error) {
+                console.log(error);
+            } else {
+                console.log(response.statusCode, body);
+                var parsed = JSON.parse(body);
+            }
+        });
+    });
+
+
+
+    //API
 
     //get all rooms
     app.get('/api/rooms', function (req, res) {

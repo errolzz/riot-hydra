@@ -7,12 +7,6 @@ function AppStore() {
     self.user = undefined;
 
     self.signedIn = function(profile) {
-        
-        if(!U.getCookie('access_token').length) {
-            authYoutube();
-        } else {
-            console.log('already authed');
-        }
 
         //check if user has been here before
         U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
@@ -98,7 +92,7 @@ function AppStore() {
             if(data.googleId) {
                 //update local user
                 self.user = data;
-                riot.route('lobby');
+                self.trigger('auth_youtube');
             }
         }, user);
     });
@@ -136,126 +130,5 @@ function AppStore() {
         }, {audience: room.audience, djs: room.djs});
     });
 }
-
-
-//units
-var U = {};
-U.getOne = function(prop, value, list) {
-    for(var i=0, l=list.length; i<l; i++) {
-        if(list[i][prop] == value) {
-            return list[i];
-        }
-    }
-}
-U.removeOne = function(prop, value, list) {
-    for(var i=0, l=list.length; i<l; i++) {
-        if(list[i][prop] == value) {
-            return list.splice(i, 1);
-        }
-    }
-}
-U.getCookie = function(cname) {
-    var name = cname + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0; i<ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1);
-        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-    }
-    return "";
-}
-U.ajax = function(type, url, success, data, error) {
-    var request = new XMLHttpRequest();
-    request.open(type, url, true);
-    request.onload = function() {
-        if (request.status >= 200 && request.status < 400) {
-            var data = JSON.parse(request.responseText);
-            try {success(data);} catch(e) {}
-        } else {
-            console.log(request)
-            try {error(request);} catch(e) {}
-        }
-    };
-    request.onerror = function() {
-        console.log(request)
-        try {error(request);} catch(e) {}
-    };
-    if(type == 'POST' || type == 'PUT') {
-        request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-        request.send(JSON.stringify(data));
-    } else {
-        request.send();
-    }
-}
-
-
-//google sign in
-function onGoogleSignIn(googleUser) {
-    var profile = googleUser.getBasicProfile();
-    var id_token = googleUser.getAuthResponse().id_token;
-    document.getElementById('site').style.display = 'none';
-
-    //validate the id token
-    U.ajax('POST', '/signin', function(data) {
-        if(data.googleId) {
-            //all set, save token
-            profile.googleId = data.googleId;
-            appStore.signedIn(profile);
-        } else {
-            //no good, sign out
-            var auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut();
-        }
-    }, {token: id_token});
-}
-
-function authYoutube() {
-    window.location = 'https://accounts.google.com/o/oauth2/auth?client_id=325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com&redirect_uri=http://localhost:8000/oauth2callback&response_type=token&scope=https://www.googleapis.com/auth/youtube';
-}
-
-function getNewAuthYoutube(refresh, callback) {
-    U.ajax('POST', 'https://www.googleapis.com/oauth2/v3/token', function(data) {
-        console.log(data);
-        //callback
-    }, {
-        code: oldAuth,
-        client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
-        client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi'
-        refresh_token: refresh,
-        grant_type: 'refresh_token'
-    });
-}
-
-function getYoutubeRefreshToken(oldAuth, callback) {
-    U.ajax('POST', 'https://www.googleapis.com/oauth2/v3/token', function(data) {
-        console.log(data);
-        //callback
-    }, {
-        code: oldAuth,
-        client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
-        client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi'
-        redirect_uri: 'http://localhost:8000',
-        grant_type: 'authorization_code'
-    });
-}
-
-//gets a users google avatar
-function getGoogleAvatar(index, googleId, callback) {
-    gapi.client.load('plus','v1', function() {
-        var request = gapi.client.plus.people.get({
-            'userId': googleId
-        });
-        request.execute(function(resp) {
-            var img;
-            if(resp.image) {
-                if(!resp.image.isDefault) {
-                    img = resp.image.url.replace('?sz=50', '?sz=100');
-                }
-            }
-            callback(index, img);
-        });
-    });
-}
-
 
 
