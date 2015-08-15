@@ -3,6 +3,7 @@
         <div class="sidebar">
             <input class="search" onkeyup={searchChanged} type="text" placeholder="search music" value={query}>
 
+            <!-- search results -->
             <div class="search-results {searching?'searching':''}">
                 <p class="search-close" onclick={closeSearch}>Back to room</p>
                 <p class="results-header"><span class="query">{query}</span> search results</p>
@@ -15,28 +16,41 @@
                 </ul>
             </div>
 
+            <!-- playlists -->
             <div class="container {selectingList?'list-open':''}">
-                <div class="dropdown">
-                    <div class="selected" onclick={openPlaylists}>
-                        <p>{currentList.snippet.title}</p>
+                <div show={currentList && !creatingPlaylist} class="playlists">
+                    <div class="dropdown">
+                        <div class="selected" onclick={openPlaylists}>
+                            <p>{currentList.name}</p>
+                        </div>
+                        <div class="options">
+                            <ul>
+                                <li onclick={closePlaylists}>Select a playlist</li>
+                                <li each={playlists} onclick={selectPlaylist}>{name}</li>
+                            </ul>
+                            <div class="new-playlist">
+                                <button onclick={togglePlaylistForm}>+ Create new playlist</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="options">
-                        <ul>
-                            <li onclick={closePlaylists}>Select a playlist</li>
-                            <li each={playlists}>{snippet.title}</li>
-                            <!-- <li class="new-list">+ Create New List</li> -->
-                        </ul>
-                    </div>
+                    <ul class="tracks">
+                        <li each={currentList.tracks}><span class="num"></span> {name}</li>
+                    </ul>
                 </div>
-                <ul class="tracks">
-                    <li><span class="num">1.</span> Song One</li>
-                    <li><span class="num">2.</span> Track of the Two</li>
-                    <li><span class="num">3.</span> Liars</li>
-                    <li><span class="num">4.</span> Mission Impossible Soundtrack of the gods</li>
-                </ul>
+
+                <div show={creatingPlaylist} class="create-playlist {postingPlaylist?'posting':''}">
+                    <p class="name-label">Give your new playlist a name:</p>
+                    <input class="playlist-name" type="text" placeholder="playlist name" onkeyup={playlistNameChange} value={newPlaylistName}>
+
+                    <p class="cancel-btn" onclick={togglePlaylistForm}>Cancel</p>
+                    <button class="create-btn" type="button" onclick={createPlaylist}>Create</button>
+                </div>
+
                 <p class="user"><span class="name">{user.name}</span> - <span class="leave" onclick={leaveRoom}>Leave room</span></p>
             </div>
         </div>
+
+        <!-- chat -->
         <div class="chat">
             <p class="room-name">{room.name}</p>
             <div class="convo">
@@ -45,6 +59,8 @@
             </div>
             <input class="chat-box" type="text" placeholder="chat">
         </div>
+
+        <!-- stage -->
         <div class="stage">
             <div class="video-holder">
                 <div class="video">
@@ -78,27 +94,28 @@
     </section>
 
     <script>
-        var self = this;
+        var self = this
+        self.creatingPlaylist = false
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
             self.room = room
-            self.update()
+            console.log(self.user)
+            //if user has playlists
+            if(self.user.playlists.length) {
+                var listUrl = '/api/playlists/'
+                listUrl += self.user.playlists.join(',')
 
-            //get users playlists
-            var listUrl = 'https://www.googleapis.com/youtube/v3/playlists';
-            listUrl += '?mine=true&part=snippet&access_token=' + U.getCookie('access_token');
-
-            U.ajax('GET', listUrl, function(data) {
-                self.currentList = data.items[0]
-                self.playlists = data.items
-                self.update();
-            }, null, function(error) {
-                //if token has expired
-
-            })
-
-            //auto select first playlist
+                //get users playlists
+                U.ajax('GET', listUrl, function(lists) {
+                    console.log(lists)
+                    self.currentList = lists[0]
+                    self.playlists = lists
+                    self.update();
+                })
+            } else {
+                self.update()
+            }
 
             //load audience avatars
             for(var i=0, l=room.audience.length; i<l; i++) {
@@ -109,20 +126,59 @@
             }
 
             //load dj avatars
-            for(var i=0, l=room.audience.length; i<l; i++) {
-                getGoogleAvatar(i, room.audience[i].googleId, function(index, img) {
-                    room.audience[index].img = img
+            for(var j=0, l=room.djs.length; j<l; j++) {
+                getGoogleAvatar(j, room.djs[j].googleId, function(index, img) {
+                    room.djs[index].img = img
                     self.update()
                 })
             }
         })
+    
+        //select a playlist 
+        selectPlaylist(e) {
+            self.currentList = e.item
+            self.selectingList = false
+        }
 
+        //open playlist dropdown
         openPlaylists(e) {
             self.selectingList = true
         }
 
+        //close playlist dropdown
         closePlaylists(e) {
             self.selectingList = false
+        }
+
+        //toggle create playlist form
+        togglePlaylistForm(e) {
+            self.creatingPlaylist = !self.creatingPlaylist
+        }
+
+        //new playlist name
+        playlistNameChange(e) {
+            self.newPlaylistName = e.target.value
+        }
+
+        //create the new playlist
+        createPlaylist(e) {
+            self.postingPlaylist = true
+            //post a new playlist
+            U.ajax('POST', '/api/playlists', function(data) {
+                console.log(data.playlists)
+                self.user = data.user
+                self.currentList = data.playlist
+                self.playlists = data.playlists
+                self.creatingPlaylist = false
+                self.postingPlaylist = false
+                self.update()
+            }, {
+                creatorId: self.user.googleId,
+                creatorName: self.user.name,
+                name: self.newPlaylistName,
+                privateList: false,
+                tracks: []
+            })
         }
 
         searchChanged(e) {

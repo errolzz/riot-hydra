@@ -168,6 +168,40 @@ room {
             }
         }
 
+        .new-playlist {
+            margin-top: 20px;
+            button {
+                width: 100%;
+                margin-top: 3px;
+            }
+        }
+
+        .create-playlist {
+            .name-label {
+                margin-bottom: 13px;
+            }
+
+            .playlist-name {
+                @include text-field();
+                display: block;
+                width: 100%;
+                margin-bottom: 13px
+            }
+
+            .cancel-btn {
+                @include action-text();
+                float: left;
+                margin-top: 12px;
+            }
+            .create-btn {
+                float: right;
+            }
+
+            &.posting {
+                pointer-events: none;
+            }
+        }
+
         .user {
             position: absolute;
             bottom: 13px;

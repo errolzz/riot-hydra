@@ -92,7 +92,8 @@ function AppStore() {
             if(data.googleId) {
                 //update local user
                 self.user = data;
-                self.trigger('auth_youtube');
+                console.log(self.user);
+                riot.route('lobby');
             }
         }, user);
     });

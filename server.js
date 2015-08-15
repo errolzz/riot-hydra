@@ -37,51 +37,6 @@ var server = app.listen(8000, function () {
         });
     });
 
-    //get a users refresh token for when their access_token expires
-    app.get('/getYoutubeRefreshToken', function(req, res) {
-        request({
-            url: 'https://www.googleapis.com/oauth2/v3/token',
-            method: 'POST',
-            json: {
-                code: oldAuth,
-                client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
-                client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi'
-                redirect_uri: 'http://localhost:8000',
-                grant_type: 'authorization_code'
-            }
-        }, function(error, response, body){
-            if(error) {
-                console.log(error);
-            } else {
-                console.log(response.statusCode, body);
-                var parsed = JSON.parse(body);
-            }
-        });
-    });
-
-
-    //when access_token expires, get a new one using the users refresh_token
-    app.get('/getNewAuthYoutube', function(req, res) {
-        request({
-            url: 'https://www.googleapis.com/oauth2/v3/token',
-            method: 'POST',
-            json: {
-                code: req.body.oldAuth,
-                client_id: '325125235792-vosk7ah47madtojr3lemn49i631n3n1h.apps.googleusercontent.com',
-                client_secret: 'HWM5QUEcUJF1l4kpLIlZUSMi',
-                refresh_token: req.body.refresh,
-                grant_type: 'refresh_token'
-            }
-        }, function(error, response, body){
-            if(error) {
-                console.log(error);
-            } else {
-                console.log(response.statusCode, body);
-                var parsed = JSON.parse(body);
-            }
-        });
-    });
-
 
 
     //API
@@ -109,7 +64,7 @@ var server = app.listen(8000, function () {
         });
     });
 
-    //get a user by name
+    //checks if a room name already exists
     app.get('/api/checkroomname/:name', function (req, res) {
         var ln = decodeURIComponent(req.params.name).toLowerCase();
         return Room.findOne({nameLower: ln}, function (err, room) {
@@ -134,12 +89,12 @@ var server = app.listen(8000, function () {
         
         room.save(function (err) {
             if (!err) {
-                return console.log('created');
+                console.log('room created: ' + room.name);
+                return res.send(room);
             } else {
-              return console.log(err);
+                return console.log(err);
             }
         });
-        return res.send(room);
     });
 
     //update a rooms users
@@ -208,25 +163,104 @@ var server = app.listen(8000, function () {
 
     //create a user
     app.post('/api/users', function (req, res) {
-        
-        var user = new User({
-            googleId:   req.body.googleId,
-            name:       req.body.name.trim(),
-            nameLower:  req.body.name.trim().toLowerCase()
+
+        //create default playlist
+        var playlist = new Playlist({
+            creatorId:      req.body.googleId,
+            creatorName:    req.body.name.trim(),
+            name:           'Default Playlist!',
+            privateList:    false,
+            tracks:         []
         });
-        
-        user.save(function (err) {
+
+        //save default playlist
+        playlist.save(function(err) {
+            //create new user
+            var user = new User({
+                googleId:   req.body.googleId,
+                name:       req.body.name.trim(),
+                nameLower:  req.body.name.trim().toLowerCase(),
+                playlists:  [playlist._id]
+            });
+
+            //save user
+            user.save(function (err) {
+                if (!err) {
+                    console.log('user created: ' + user.name);
+                    return res.send(user);
+                } else {
+                  return console.log(err);
+                }
+            });
+        });
+    });
+
+
+    //get a users playlists
+    app.get('/api/playlists/:playlists', function (req, res) {
+        getUserPlaylists(req.params.playlists, function(playlists) {
+            return res.send(playlists);
+        });
+    });
+
+    //post a new playlist
+    app.post('/api/playlists', function (req, res) {
+
+        //create new playlist
+        var playlist = new Playlist({
+            creatorId:      req.body.creatorId,
+            creatorName:    req.body.creatorName,
+            name:           req.body.name.trim(),
+            privateList:    false,
+            tracks:         []
+        });
+
+        //save user
+        playlist.save(function (err) {
             if (!err) {
-                return console.log('created');
+                console.log('playlist created: ' + playlist.name);
+
+                //get the current user
+                User.findOne({googleId: req.body.creatorId}, function (err, user) {
+                    //add playlist to user
+                    user.playlists.push(playlist._id);
+
+                    //save playlists on user
+                    user.save(function (err) {
+                        if(!err) {
+                            //get new playlists
+                            getUserPlaylists(user.playlists.join(','), function(playlists) {
+
+                                //console.log(playlists);
+                                var response = {
+                                    user: user,
+                                    playlist: playlist,
+                                    playlists: playlists
+                                };
+                                return res.send(response);
+                            });
+                        } else {
+                            console.log(err);
+                        }
+                    });
+                });
             } else {
               return console.log(err);
             }
         });
-        return res.send(user);
     });
 
     console.log('Example app listening at http://%s:%s', host, port);
 });
+
+function getUserPlaylists(listIds, callback) {
+    var lists = listIds.split(',');
+    Playlist.find({
+        '_id': { $in: lists}
+    }, function(err, playlists) {
+        callback(playlists);
+    });
+}
 
 
 //ROUTES
@@ -251,7 +285,17 @@ mongoose.connect('mongodb://localhost/hydra', options); //DEV
 var userSchema = mongoose.Schema({
     googleId:   {type: String, unique: true, required: true},
     name:       {type: String, unique: true, required: true},
-    nameLower:  {type: String, unique: true, required: true}
+    nameLower:  {type: String, unique: true, required: true},
+    playlists:  {type: Array} //holds ids of playlists
+});
+
+//define Playlists
+var playlistSchema = mongoose.Schema({
+    creatorId:      {type: String, required: true},
+    creatorName:    {type: String, required: true},
+    name:           {type: String, unique: true, required: true},
+    privateList:    {type: Boolean, required: true},
+    tracks:         {type: Array} //holds {id: youtube_video_id, name: youtube_video_name}
 });
 
 //define Rooms
@@ -259,12 +303,13 @@ var roomSchema = mongoose.Schema({
     name:           {type: String, unique: true, required: true},
     nameLower:      {type: String, unique: true, required: true},
     privateRoom:    {type: Boolean, required: true},
-    audience:       {type: Array},
-    djs:            {type: Array}
+    audience:       {type: Array}, //holds User models
+    djs:            {type: Array} //holds User models
 });
 
 //init models
 var User = mongoose.model('User', userSchema);
+var Playlist = mongoose.model('Playlist', playlistSchema);
 var Room = mongoose.model('Room', roomSchema);
 
 //create database connection
@@ -278,7 +323,8 @@ db.once('open', function() {
     var u1 = new User({
         googleId: '1232423434',
         name: 'TIM the !',
-        nameLower: 'tim the !'
+        nameLower: 'tim the !',
+        playlists: []
     });
     u1.save(function(err) {console.log('created')});
 
@@ -321,8 +367,4 @@ db.once('open', function() {
     r3.save(function(err) {console.log('created')});
 });
 
-
-//video search
-//video sync
-//chat
 

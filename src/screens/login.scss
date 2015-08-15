@@ -45,19 +45,12 @@ login {
         }
     }
 
-    .auth-youtube {
-        display: none;
-    }
-
     section.choose-name {
         .first {
             display: none;
         }
         .wizard {
             display: block;
-        }
-        .auth-youtube {
-            display: none;
         }
     }
 
@@ -67,9 +60,6 @@ login {
         }
         .wizard {
             display: none;
-        }
-        .auth-youtube {
-            display: block;
         }
     }
 }
