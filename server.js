@@ -148,7 +148,7 @@ function createServer() {
                     room.currentDj = {spot: 0, _id: room.djs[0]._id};
                 } else {
                     //when a dj quits, keep current dj value the same
-                    if(room.currentDj.spot > room.djs.length - 1]) {
+                    if(room.currentDj.spot > room.djs.length - 1) {
                         //unless the last dj quit, then go back to first
                         room.currentDj = {spot: 0, _id: room.djs[0]._id};
                     }

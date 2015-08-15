@@ -67,8 +67,9 @@
         <div class="stage">
             <div class="video-holder">
                 <div class="video">
-                    <!-- <img src="assets/img/gorillaz.jpg" alt="" width="100%" /> -->
-                    <iframe type="text/html" width="100%" height="auto" src={videoUrl}/>
+                    <div id="yt-player">
+                        <img src="assets/img/gorillaz.jpg" width="100%" alt="" />
+                    </div>
                 </div>
                 <div class="djs">
                     <div each={room.djs} class="avatar {isPlaying?'playing':''}">
@@ -132,10 +133,35 @@
             if(self.userInRoom(updatedRoom)) {
                 //load youtube player with current track
                 self.room = updatedRoom
-                self.videoUrl = 'http://www.youtube.com/embed/' + self.room.currentTrack._id
+
+                //init the youtube player
+                self.player = new YT.Player('yt-player', {
+                    videoId: self.room.currentTrack._id,
+                    playerVars: {
+                        //start: ??, //TODO: how do we get this? (time to start video at)
+                        autoplay: 1,
+                        controls: 0,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0
+                    },
+                    events: {
+                        'onReady': self.onPlayerReady,
+                        'onStateChange': self.onPlayerStateChange
+                    }
+                })
+
                 self.update()
             }
         })
+
+        onPlayerReady(e) {
+            e.target.playVideo()
+        }
+
+        onPlayerStateChange(e) {
+            console.log(e)
+        }
 
         //check if the current user is in the room provided
         userInRoom(room) {
@@ -156,9 +182,11 @@
             var startNewDj = false
             if(room.currentDj) {
                 //the last dj quit while playing
-                if(room.currentDj._id != self.room.currentDj._id) {
-                    //start new dj after update
-                    startNewDj = true
+                if(self.room.currentDj) {
+                    if(room.currentDj._id != self.room.currentDj._id) {
+                        //start new dj after update
+                        startNewDj = true
+                    }
                 }
             }
 
@@ -197,12 +225,12 @@
             if(room.currentDj != undefined) {
                 //loop through djs to set which is playing
                 for(var i=0, l=room.djs.length; i<l; i++) {
-                    room.djs[room.currentDj].isPlaying = true
+                    room.djs[room.currentDj.spot].isPlaying = true
                 }
 
                 //start new dj if old one quit
                 if(startNewDj) {
-                    playTrackBy(self.djs[room.currentDj.spot])
+                    self.playTrackBy(self.djs[room.currentDj.spot])
                 }
             }
 
