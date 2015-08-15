@@ -67,7 +67,8 @@
         <div class="stage">
             <div class="video-holder">
                 <div class="video">
-                    <img src="assets/img/gorillaz.jpg" alt="" width="100%" />
+                    <!-- <img src="assets/img/gorillaz.jpg" alt="" width="100%" /> -->
+                    <iframe type="text/html" width="100%" height="auto" src={videoUrl}/>
                 </div>
                 <div class="djs">
                     <div each={room.djs} class="avatar {isPlaying?'playing':''}">
@@ -80,7 +81,7 @@
                 </div>
                 <button class="quit-dj" show={userIsDj} onclick={quitDj}>Quit DJ</button>
                 <div class="overlay">
-                    <p class="title">Song Title</p>
+                    <p class="title">{room.currentTrack.title}</p>
                     <button class="like">* Apprecieate Track *</button>
                 </div>
             </div>
@@ -121,18 +122,47 @@
 
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
-            //only update room if it's the one user is in
-            //is this really the best way to limit this?
-            var isAud = U.getOne('_id', self.user._id, updatedRoom.audience);
-            var isDj = U.getOne('_id', self.user._id, updatedRoom.djs)
-
-            if(isAud || isDj) {
+            if(self.userInRoom(updatedRoom)) {
                 self.updateRoom(updatedRoom)
             }
         })
 
+        //listen for track changes
+        socket.on('room_track_changed', function(updatedRoom) {
+            if(self.userInRoom(updatedRoom)) {
+                //load youtube player with current track
+                self.room = updatedRoom
+                self.videoUrl = 'http://www.youtube.com/embed/' + self.room.currentTrack._id
+                self.update()
+            }
+        })
+
+        //check if the current user is in the room provided
+        userInRoom(room) {
+            //only update room if it's the one user is in
+            //is this really the best way to limit this?
+            var isAud = U.getOne('_id', self.user._id, room.audience)
+            var isDj = U.getOne('_id', self.user._id, room.djs)
+            if(isAud || isDj) {
+                return true
+            } else {
+                return false
+            }
+        }
+
         //refresh room with new data
         updateRoom(room) {
+            //if the next dj should start playing
+            var startNewDj = false
+            if(room.currentDj) {
+                //the last dj quit while playing
+                if(room.currentDj._id != self.room.currentDj._id) {
+                    //start new dj after update
+                    startNewDj = true
+                }
+            }
+
+            //update new room data
             self.room = room
 
             //TODO: refactor to only load new images
@@ -169,6 +199,11 @@
                 for(var i=0, l=room.djs.length; i<l; i++) {
                     room.djs[room.currentDj].isPlaying = true
                 }
+
+                //start new dj if old one quit
+                if(startNewDj) {
+                    playTrackBy(self.djs[room.currentDj.spot])
+                }
             }
 
             self.update()
@@ -186,6 +221,12 @@
             //send updated room djs and audience
             U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
+                //if the user is the only dj
+                if(updatedRoom.djs.length == 1) {
+                    console.log('im only dj')
+                    //start playing the first song in their current playlist
+                    self.playTrackBy(self.user);
+                }
             }, {audience: self.room.audience, djs: self.room.djs})
         }
 
@@ -241,6 +282,19 @@
         //go back to the lobby
         leaveRoom(e) {
             RiotControl.trigger('room.left_room', self.room)
+        }
+
+        //called from first dj stepping up
+        //also from when current djs song ends
+        playTrackBy(dj) {
+            //if current user is the next dj to play
+            if(dj.googleId == self.user.googleId) {
+                console.log('I am the dj')
+                //set the next current track to play in the room
+                U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
+                    //socket emits room_track_changed
+                }, {track: self.currentList.tracks[0]})
+            }
         }
 
         //create the new playlist

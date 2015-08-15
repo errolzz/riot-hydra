@@ -108,6 +108,22 @@ function createServer() {
         });
     });
 
+    app.put('/api/roomtrack/:id', function (req, res) {
+        Room.findById(req.params.id, function (err, room) {
+            room.currentTrack = req.body.track;
+
+            room.save(function(err) {
+                if(!err) {
+                    console.log('updated room track');
+                    res.send(room);
+                    socket.emit('room_track_changed', room);
+                } else {
+                    console.log(err);
+                }
+            })
+        });
+    });
+
     //update a rooms users
     app.put('/api/roomusers/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
@@ -125,14 +141,16 @@ function createServer() {
                 if(room.djs.length === 0) {
                     //if no djs are playing
                     room.currentDj = undefined;
+                    //also clear the current track
+                    room.currentTrack = undefined;
                 } else if(room.djs.length === 1) {
                     //if there is only 1 dj, make them current
-                    room.currentDj = 0;
+                    room.currentDj = {spot: 0, _id: room.djs[0]._id};
                 } else {
                     //when a dj quits, keep current dj value the same
-                    if(room.currentDj > room.djs.length - 1) {
+                    if(room.currentDj.spot > room.djs.length - 1]) {
                         //unless the last dj quit, then go back to first
-                        room.currentDj = 0;
+                        room.currentDj = {spot: 0, _id: room.djs[0]._id};
                     }
                 }
             }
@@ -151,7 +169,6 @@ function createServer() {
                 //save room with updated users
                 room.save(function (err) {
                     if (!err) {
-                        console.log('updated room')
                         res.send(room);
                         socket.emit('room_users_changed', room);
                     } else {
@@ -364,8 +381,8 @@ var roomSchema = mongoose.Schema({
     privateRoom:    {type: Boolean, required: true},
     audience:       {type: Array}, //holds User models
     djs:            {type: Array}, //holds User models
-    currentDj:      {type: Number}, //index of a dj
-    currentTrack:   {type: String} //youtube video id
+    currentDj:      {type: Object}, //{spot: array-index, _id: user-id}
+    currentTrack:   {type: Object} //youtube video id and name
 });
 
 //init models
@@ -379,7 +396,7 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
     console.log('connected to db');
     //mostly for testing
-    //manually create modles here
+    //manually create models here
 
     var u1 = new User({
         googleId: '1232423434',
@@ -397,10 +414,8 @@ db.once('open', function() {
         audience: [
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
-        djs: [
-            {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
-        ],
-        currentDj: 0
+        djs: [],
+        currentDj: undefined
     });
     var r2 = new Room({
         name: 'Torture',
@@ -409,10 +424,8 @@ db.once('open', function() {
         audience: [
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
-        djs: [
-            {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
-        ],
-        currentDj: 0
+        djs: [],
+        currentDj: undefined
     });
     var r3 = new Room({
         name: 'FATSS',
@@ -421,10 +434,8 @@ db.once('open', function() {
         audience: [
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
-        djs: [
-            {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
-        ],
-        currentDj: 0
+        djs: [],
+        currentDj: undefined
     });
     r1.save(function(err) {console.log('created')});
     r2.save(function(err) {console.log('created')});
