@@ -3,9 +3,20 @@
 var express = require('express');
 var bparser = require('body-parser');
 var request = require('request');
-var app = express();
+var socketIo = require('socket.io');
 
-var server = app.listen(8000, function () {
+var app = express();
+var server = app.listen(8000, createServer);
+var io = socketIo(server);
+var socket;
+
+//on socket connect
+io.on('connection', function (sock) {
+    //save socket instance
+    socket = sock;
+});
+
+function createServer() {
     var host = server.address().address;
     var port = server.address().port;
 
@@ -108,12 +119,27 @@ var server = app.listen(8000, function () {
 
             //update room djs
             if(req.body.djs) {
+                //set new djs
                 room.djs = req.body.djs;
+                
+                if(room.djs.length === 0) {
+                    //if no djs are playing
+                    room.currentDj = undefined;
+                } else if(room.djs.length === 1) {
+                    //if there is only 1 dj, make them current
+                    room.currentDj = 0;
+                } else {
+                    //when a dj quits, keep current dj value the same
+                    if(room.currentDj > room.djs.length - 1) {
+                        //unless the last dj quit, then go back to first
+                        room.currentDj = 0;
+                    }
+                }
             }
 
             if(room.audience.length + room.djs.length == 0) {
                 //if room is now empty, delete it
-                return room.remove(function (err) {
+                room.remove(function (err) {
                     if (!err) {
                         console.log('removed');
                         return res.send({removed: true});
@@ -123,14 +149,14 @@ var server = app.listen(8000, function () {
                 });
             } else {
                 //save room with updated users
-                return room.save(function (err) {
+                room.save(function (err) {
                     if (!err) {
                         console.log('updated room')
-                        return res.send(room);
+                        res.send(room);
+                        socket.emit('room_users_changed', room);
                     } else {
                         console.log(err);
                     }
-                    return res.send(room);
                 });
             }
         });
@@ -284,7 +310,7 @@ var server = app.listen(8000, function () {
     });
 
     console.log('Example app listening at http://%s:%s', host, port);
-});
+}
 
 function getUserPlaylists(listIds, callback) {
     var lists = listIds.split(',');
@@ -337,7 +363,9 @@ var roomSchema = mongoose.Schema({
     nameLower:      {type: String, unique: true, required: true},
     privateRoom:    {type: Boolean, required: true},
     audience:       {type: Array}, //holds User models
-    djs:            {type: Array} //holds User models
+    djs:            {type: Array}, //holds User models
+    currentDj:      {type: Number}, //index of a dj
+    currentTrack:   {type: String} //youtube video id
 });
 
 //init models
@@ -371,7 +399,8 @@ db.once('open', function() {
         ],
         djs: [
             {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
-        ]
+        ],
+        currentDj: 0
     });
     var r2 = new Room({
         name: 'Torture',
@@ -382,7 +411,8 @@ db.once('open', function() {
         ],
         djs: [
             {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
-        ]
+        ],
+        currentDj: 0
     });
     var r3 = new Room({
         name: 'FATSS',
@@ -393,7 +423,8 @@ db.once('open', function() {
         ],
         djs: [
             {googleId: '120213213', name: 'o01226', nameLower: 'o01226'}
-        ]
+        ],
+        currentDj: 0
     });
     r1.save(function(err) {console.log('created')});
     r2.save(function(err) {console.log('created')});

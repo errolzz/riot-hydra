@@ -70,20 +70,18 @@
                     <img src="assets/img/gorillaz.jpg" alt="" width="100%" />
                 </div>
                 <div class="djs">
-                    <div each={room.djs} class="avatar">
+                    <div each={room.djs} class="avatar {isPlaying?'playing':''}">
                         <img src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
                         <p class="avatar-name">{name}</p>
                     </div>
-                    <div class="be-dj">
-                        <div class="plus">
-                            <div class="h"></div>
-                            <div class="v"></div>
-                        </div>
+                    <div class="be-dj" show={openDj} onclick={becomeDj}>
+                        <button>Start to DJ</button>
                     </div>
                 </div>
+                <button class="quit-dj" show={userIsDj} onclick={quitDj}>Quit DJ</button>
                 <div class="overlay">
                     <p class="title">Song Title</p>
-                    <p class="like">* Apprecieate Track *</p>
+                    <button class="like">* Apprecieate Track *</button>
                 </div>
             </div>
             <div class="audience">
@@ -102,7 +100,7 @@
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
-            self.room = room
+
             //if user has playlists
             if(self.user.playlists.length) {
                 var listUrl = '/api/playlists/'
@@ -117,6 +115,27 @@
             } else {
                 self.update()
             }
+
+            //socket will also emit room_users_changed at this point
+        })
+
+        //listen for user activity
+        socket.on('room_users_changed', function(updatedRoom) {
+            //only update room if it's the one user is in
+            //is this really the best way to limit this?
+            var isAud = U.getOne('_id', self.user._id, updatedRoom.audience);
+            var isDj = U.getOne('_id', self.user._id, updatedRoom.djs)
+
+            if(isAud || isDj) {
+                self.updateRoom(updatedRoom)
+            }
+        })
+
+        //refresh room with new data
+        updateRoom(room) {
+            self.room = room
+
+            //TODO: refactor to only load new images
 
             //load audience avatars
             for(var i=0, l=room.audience.length; i<l; i++) {
@@ -133,8 +152,58 @@
                     self.update()
                 })
             }
-        })
-    
+
+            //is dj spot open
+            self.openDj = room.djs.length < 5 ? true : false
+            //if you are djing, no open dj spot
+            if(U.getOne('_id', self.user._id, room.djs)) {
+                self.openDj = false
+                self.userIsDj = true
+            } else {
+                self.userIsDj = false
+            }
+
+            //if the room has a dj currently playing a track
+            if(room.currentDj != undefined) {
+                //loop through djs to set which is playing
+                for(var i=0, l=room.djs.length; i<l; i++) {
+                    room.djs[room.currentDj].isPlaying = true
+                }
+            }
+
+            self.update()
+        }
+        
+        //step up to dj
+        becomeDj(e) {
+            //remove user from local audience
+            U.removeOne('_id', self.user._id, self.room.audience)
+            //add user to local djs
+            self.room.djs.push(self.user)
+            //hide become dj button
+            self.openDj = false
+
+            //send updated room djs and audience
+            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                //updated room is sent via socket as room_users_changed
+            }, {audience: self.room.audience, djs: self.room.djs})
+        }
+
+        //quit as dj
+        quitDj(e) {
+            //remove user from local djs
+            U.removeOne('_id', self.user._id, self.room.djs)
+            //add user to local audience
+            self.room.audience.push(self.user)
+            //hide become dj button
+            self.openDj = true
+
+            //send updated room djs and audience
+            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                //updated room is sent via socket as room_users_changed
+            }, {audience: self.room.audience, djs: self.room.djs})
+        }
+
         //select a playlist 
         selectPlaylist(e) {
             self.setCurrentPlaylist(e.item)
@@ -167,6 +236,11 @@
         //new playlist name
         playlistNameChange(e) {
             self.newPlaylistName = e.target.value
+        }
+
+        //go back to the lobby
+        leaveRoom(e) {
+            RiotControl.trigger('room.left_room', self.room)
         }
 
         //create the new playlist
@@ -273,10 +347,6 @@
                 self.setCurrentPlaylist(updatedPlylist)
                 self.update()
             }, trackData)
-        }
-
-        leaveRoom(e) {
-            RiotControl.trigger('room.left_room', self.room)
         }
     </script>
 </room>

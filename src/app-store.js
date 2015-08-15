@@ -41,6 +41,7 @@ function AppStore() {
 
     //APP / ROUTER
     self.on('app.app_mounted', function() {
+
         riot.route(function(p1, p2, p3) {
 
             if(p1 == 'lobby') {
@@ -71,7 +72,7 @@ function AppStore() {
                         
                         //update room in db with new audience and djs
                         U.ajax('PUT', '/api/roomusers/' + room._id, function(updatedRoom) {
-                            //user left room
+                            //user joined room
                             self.trigger('screen_changed', 'room');
                             self.trigger('render_room', self.user, updatedRoom);
                         }, {audience: room.audience});
@@ -126,6 +127,7 @@ function AppStore() {
         
         //update room in db with new audience and djs
         U.ajax('PUT', '/api/roomusers/' + room._id, function(removedUserFromRoom) {
+            //socket updates room for remain users via room_users_changed
             //user left room
             riot.route('lobby');
         }, {audience: room.audience, djs: room.djs});

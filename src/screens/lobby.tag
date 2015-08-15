@@ -6,9 +6,10 @@
             <p class="user"><span class="name">{user.name}</span> - <span class="logout" onclick={signOut}>Log out</span></p>
         </div>
         <div class="room-list">
-            <div class="create-new">
+            <div class="lobby-control">
                 <input type="text" placeholder="search rooms">
-                <p onclick={openCreate}>+ Create new room</p>
+                <p class="or">or</p>
+                <p class="create-link" onclick={openCreate}>+ Create new room</p>
             </div>
             <ul>
                 <li each={ rooms }>
