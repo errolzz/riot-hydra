@@ -115,6 +115,13 @@ room {
                 .add {
                     @include action-text();
                 }
+                .added {
+                    color: $white;
+                    background: $pink;
+                    display: inline-block;
+                    padding: 0 2px;
+                    cursor: default;
+                }
             }
         }
 
@@ -157,6 +164,11 @@ room {
                     }
                 }
             }
+        }
+
+        .track-holder {
+            overflow-y: scroll;
+            height: calc(100% - 154px);
         }
 
         .tracks {

@@ -43,7 +43,7 @@ var server = app.listen(8000, function () {
 
     //get all rooms
     app.get('/api/rooms', function (req, res) {
-        return Room.find(function (err, rooms) {
+        Room.find(function (err, rooms) {
             if (!err) {
                 return res.send(rooms);
             } else {
@@ -54,7 +54,7 @@ var server = app.listen(8000, function () {
 
     //get a room
     app.get('/api/rooms/:id', function (req, res) {
-        return Room.findOne({_id: req.params.id}, function (err, room) {
+        Room.findOne({_id: req.params.id}, function (err, room) {
             room = room || {_id: null};
             if (!err) {
                 return res.send(room);
@@ -67,7 +67,7 @@ var server = app.listen(8000, function () {
     //checks if a room name already exists
     app.get('/api/checkroomname/:name', function (req, res) {
         var ln = decodeURIComponent(req.params.name).toLowerCase();
-        return Room.findOne({nameLower: ln}, function (err, room) {
+        Room.findOne({nameLower: ln}, function (err, room) {
             room = room || {name: null};
             if (!err) {
                 return res.send(room);
@@ -99,7 +99,7 @@ var server = app.listen(8000, function () {
 
     //update a rooms users
     app.put('/api/roomusers/:id', function (req, res) {
-        return Room.findById(req.params.id, function (err, room) {
+        Room.findById(req.params.id, function (err, room) {
 
             //update room audience
             if(req.body.audience) {
@@ -138,7 +138,7 @@ var server = app.listen(8000, function () {
 
     //get a user by googleid
     app.get('/api/users/:googleid', function (req, res) {
-        return User.findOne({googleId: req.params.googleid}, function (err, user) {
+        User.findOne({googleId: req.params.googleid}, function (err, user) {
             user = user || {googleId: null};
             if (!err) {
                 return res.send(user);
@@ -151,7 +151,7 @@ var server = app.listen(8000, function () {
     //get a user by name
     app.get('/api/checkname/:name', function (req, res) {
         var ln = decodeURIComponent(req.params.name).toLowerCase();
-        return User.findOne({nameLower: ln}, function (err, user) {
+        User.findOne({nameLower: ln}, function (err, user) {
             user = user || {name: null};
             if (!err) {
                 return res.send(user);
@@ -246,6 +246,39 @@ var server = app.listen(8000, function () {
                 });
             } else {
               return console.log(err);
+            }
+        });
+    });
+
+    //add a track to a playlist
+    app.post('/api/addtrack', function (req, res) {
+        Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
+            if(!err) {
+                playlist.tracks.unshift(req.body.track);
+                //save playlist
+                playlist.save(function (err) {
+                    return res.send(playlist);
+                });
+            } else {
+                console.log(err);
+            }
+        });
+    });
+
+    //when a track finishes playing, move it to last in list
+    app.post('/api/reorder', function (req, res) {
+        Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
+            if(!err) {
+                //take first track from playlist out
+                var justPlayed = playlist.tracks.shift();
+                //and add it to the back
+                playlist.push(justPlayed);
+                //save playlist
+                playlist.save(function (err) {
+                    return res.send(playlist);
+                });
+            } else {
+                console.log(err);
             }
         });
     });

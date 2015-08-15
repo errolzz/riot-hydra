@@ -11,7 +11,8 @@
                     <li class="result" each={searchResults}>
                         <img src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
                         <p class="title">{snippet.title}</p>
-                        <p class="add" onclick={addToPlaylist}>+ Add to playlist</p>
+                        <p hide={added} class="add" onclick={addToPlaylist}>+ Add to playlist</p>
+                        <p show={added} class="added">In playlist!</p>
                     </li>
                 </ul>
             </div>
@@ -33,9 +34,11 @@
                             </div>
                         </div>
                     </div>
-                    <ul class="tracks">
-                        <li each={currentList.tracks}><span class="num"></span> {name}</li>
-                    </ul>
+                    <div class="track-holder">
+                        <ul class="tracks">
+                            <li each={currentList.tracks}><span class="num">{index}.</span> {title}</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div show={creatingPlaylist} class="create-playlist {postingPlaylist?'posting':''}">
@@ -64,7 +67,7 @@
         <div class="stage">
             <div class="video-holder">
                 <div class="video">
-                    <img src="assets/img/chiddy-bang.jpg" alt="" width="100%" />
+                    <img src="assets/img/gorillaz.jpg" alt="" width="100%" />
                 </div>
                 <div class="djs">
                     <div each={room.djs} class="avatar">
@@ -100,7 +103,6 @@
         RiotControl.on('render_room', function(user, room) {
             self.user = user
             self.room = room
-            console.log(self.user)
             //if user has playlists
             if(self.user.playlists.length) {
                 var listUrl = '/api/playlists/'
@@ -108,8 +110,7 @@
 
                 //get users playlists
                 U.ajax('GET', listUrl, function(lists) {
-                    console.log(lists)
-                    self.currentList = lists[0]
+                    self.setCurrentPlaylist(lists[0])
                     self.playlists = lists
                     self.update();
                 })
@@ -136,13 +137,21 @@
     
         //select a playlist 
         selectPlaylist(e) {
-            self.currentList = e.item
+            self.setCurrentPlaylist(e.item)
             self.selectingList = false
         }
 
         //open playlist dropdown
         openPlaylists(e) {
-            self.selectingList = true
+            var listUrl = '/api/playlists/'
+            listUrl += self.user.playlists.join(',')
+
+            //get users playlists
+            U.ajax('GET', listUrl, function(lists) {
+                self.playlists = lists
+                self.selectingList = true
+                self.update();
+            })
         }
 
         //close playlist dropdown
@@ -165,9 +174,8 @@
             self.postingPlaylist = true
             //post a new playlist
             U.ajax('POST', '/api/playlists', function(data) {
-                console.log(data.playlists)
                 self.user = data.user
-                self.currentList = data.playlist
+                self.setCurrentPlaylist(data.playlist)
                 self.playlists = data.playlists
                 self.creatingPlaylist = false
                 self.postingPlaylist = false
@@ -179,6 +187,14 @@
                 privateList: false,
                 tracks: []
             })
+        }
+
+        //loop through current playlist tracks and assign index
+        setCurrentPlaylist(list) {
+            for(var i=0, l=list.tracks.length; i<l; i++) {
+                list.tracks[i].index = i + 1
+            }
+            self.currentList = list
         }
 
         searchChanged(e) {
@@ -215,6 +231,20 @@
 
             searchTimer = window.setTimeout(function() {
                 U.ajax('GET', q, function(data) {
+
+                    var tl = self.currentList.tracks.length
+                    var rl = data.items.length
+
+                    //check if any results are already in playlist
+                    for(var i=0; i<tl; i++) {
+                        for(var j=0; j<rl; j++) {
+                            //if video id matches track _id set added to true
+                            if(self.currentList.tracks[i]._id == data.items[j].id.videoId) {
+                                console.log('found a match')
+                                data.items[j].added = true
+                            }
+                        }
+                    }
                     self.searchResults = data.items
                     self.update()
                 })
@@ -229,8 +259,20 @@
         }
 
         addToPlaylist(e) {
-            console.log(e.item);
-            //add to self.currentList
+            var trackData = {
+                track: {
+                    _id: e.item.id.videoId,
+                    title: e.item.snippet.title
+                },
+                playlistId: self.currentList._id
+            }
+
+            e.item.added = true
+
+            U.ajax('POST', '/api/addtrack', function(updatedPlylist) {
+                self.setCurrentPlaylist(updatedPlylist)
+                self.update()
+            }, trackData)
         }
 
         leaveRoom(e) {
