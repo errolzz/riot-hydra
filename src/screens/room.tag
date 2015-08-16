@@ -114,9 +114,17 @@
             })
 
             window.onbeforeunload = function() {
+                //if user was dj, quit dj
                 if(self.userIsDj) {
                     self.quitDj()
                 }
+                //remove user from local audience
+                U.removeOne('_id', self.user._id, self.room.audience)
+
+                //send updated room djs and audience
+                U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                    //updated room is sent via socket as room_users_changed
+                }, {audience: self.room.audience})
             }
 
             //socket will also emit room_users_changed at this point
