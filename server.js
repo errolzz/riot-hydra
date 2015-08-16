@@ -7,8 +7,11 @@ var socketIo = require('socket.io');
 
 var app = express();
 var server = app.listen(8000, createServer);
+
 var io = socketIo(server);
 var socket;
+
+
 
 //on socket connect
 io.on('connection', function (sock) {
@@ -169,6 +172,7 @@ function createServer() {
                 //save room with updated users
                 room.save(function (err) {
                     if (!err) {
+                        console.log('changing room users');
                         res.send(room);
                         socket.emit('room_users_changed', room);
                     } else {

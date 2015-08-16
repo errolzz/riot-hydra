@@ -147,16 +147,16 @@
 
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
+            console.log('room_users_changed');
             if(self.userInRoom(updatedRoom)) {
+                console.log('im in the room');
                 //if the room is already loaded
                 if(self.room) {
-                    console.log('room exists only get new avs')
                     //update new audience avatars
                     self.findNewAvatars(self.room.audience, updatedRoom.audience)
                     //update new dj avatars
                     self.findNewAvatars(self.room.djs, updatedRoom.djs)
                 } else {
-                    console.log('new room get all new avs')
                     //load all dj avatars
                     self.updateAvatars(updatedRoom.djs)
                     //load all audience avatars
@@ -212,7 +212,6 @@
             for(var i=0, l=users.length; i<l; i++) {
                 getGoogleAvatar(i, users[i].googleId, function(index, img) {
                     users[index].img = img
-                    console.log('got new avatar')
                     self.update()
                 })
             }
@@ -316,7 +315,6 @@
                 //updated room is sent via socket as room_users_changed
                 //if the user is the only dj
                 if(updatedRoom.djs.length == 1) {
-                    console.log('im only dj')
                     //start playing the first song in their current playlist
                     self.playTrackBy(self.user);
                 }
@@ -382,7 +380,6 @@
         playTrackBy(dj) {
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
-                console.log('I am the dj')
                 //set the next current track to play in the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
@@ -461,7 +458,6 @@
                         for(var j=0; j<rl; j++) {
                             //if video id matches track _id set added to true
                             if(self.currentList.tracks[i]._id == data.items[j].id.videoId) {
-                                console.log('found a match')
                                 data.items[j].added = true
                             }
                         }
