@@ -309,13 +309,17 @@ function createServer() {
     });
 
     //when a track finishes playing, move it to last in list
-    app.post('/api/reorder', function (req, res) {
+    app.post('/api/playlistorder', function (req, res) {
         Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
             if(!err) {
-                //take first track from playlist out
-                var justPlayed = playlist.tracks.shift();
-                //and add it to the back
-                playlist.push(justPlayed);
+                //delete the track indexes
+                for(var i=0, l=req.body.tracks.length; i<l; i++) {
+                    delete req.body.tracks[i].index;
+                }
+                
+                //update track order
+                playlist.tracks = req.body.tracks;
+
                 //save playlist
                 playlist.save(function (err) {
                     return res.send(playlist);

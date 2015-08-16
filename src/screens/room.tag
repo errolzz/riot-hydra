@@ -103,28 +103,73 @@
         RiotControl.on('render_room', function(user, room) {
             self.user = user
 
-            //if user has playlists
-            if(self.user.playlists.length) {
-                var listUrl = '/api/playlists/'
-                listUrl += self.user.playlists.join(',')
+            var listUrl = '/api/playlists/'
+            listUrl += self.user.playlists.join(',')
 
-                //get users playlists
-                U.ajax('GET', listUrl, function(lists) {
-                    self.setCurrentPlaylist(lists[0])
-                    self.playlists = lists
-                    self.update();
-                })
-            } else {
-                self.update()
+            //get users playlists
+            U.ajax('GET', listUrl, function(lists) {
+                self.setCurrentPlaylist(lists[0])
+                self.playlists = lists
+                self.updateRoom(self.room)
+            })
+
+            window.onbeforeunload = function() {
+                if(self.userIsDj) {
+                    self.quitDj()
+                }
             }
 
             //socket will also emit room_users_changed at this point
         })
 
+        //handle youtube player state changes
+        onPlayerStateChange(e) {
+            if(e.data == 2) {
+                //play video immediately if paused
+                self.player.playVideo()
+            } else if(e.data == 0) {
+                //when video ends move it to the end of current djs current playlist
+                //take first track from playlist out
+                var justPlayed = self.currentList.tracks.shift();
+                //and add it to the back
+                self.currentList.tracks.push(justPlayed);
+
+                //post new current list order
+                U.ajax('POST', '/api/playlistorder', function(playlist) {
+                    //get the next dj spot
+                    var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
+                    setCurrentPlaylist(playlist)
+                    self.update()
+                    self.playTrackBy(self.room.djs[nextDj])
+                }, self.currentList);
+            }
+        }
+
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
             if(self.userInRoom(updatedRoom)) {
-                self.updateRoom(updatedRoom)
+                //if the room is already loaded
+                if(self.room) {
+                    console.log('room exists only get new avs')
+                    //update new audience avatars
+                    self.findNewAvatars(self.room.audience, updatedRoom.audience)
+                    //update new dj avatars
+                    self.findNewAvatars(self.room.djs, updatedRoom.djs)
+                } else {
+                    console.log('new room get all new avs')
+                    //load all dj avatars
+                    self.updateAvatars(updatedRoom.djs)
+                    //load all audience avatars
+                    self.updateAvatars(updatedRoom.audience)
+                }
+
+                if(self.currentList) {
+                    //if currentList is ready (and everything else) update room now
+                    self.updateRoom(updatedRoom)
+                } else {
+                    //otherwise save updated room but dont render yet
+                    self.room = updatedRoom
+                }
             }
         })
 
@@ -134,33 +179,62 @@
                 //load youtube player with current track
                 self.room = updatedRoom
 
-                //init the youtube player
-                self.player = new YT.Player('yt-player', {
-                    videoId: self.room.currentTrack._id,
-                    playerVars: {
-                        //start: ??, //TODO: how do we get this? (time to start video at)
-                        autoplay: 1,
-                        controls: 0,
-                        modestbranding: 1,
-                        rel: 0,
-                        showinfo: 0
-                    },
-                    events: {
-                        'onReady': self.onPlayerReady,
-                        'onStateChange': self.onPlayerStateChange
-                    }
-                })
-
+                //play the current track
+                if(self.player) {
+                    self.player.loadVideoById(self.room.currentTrack._id)
+                } else {
+                    self.createPlayer()
+                }
+                
                 self.update()
             }
         })
 
-        onPlayerReady(e) {
-            e.target.playVideo()
+        //check which users avatars have not yet loaded
+        findNewAvatars(oldRoomUsers, newRoomUsers) {
+            var newUsers = []
+            for(var i=0, l=newRoomUsers.length; i<l; i++) {
+                var newUser = true
+                for(var j=0, ll=oldRoomUsers.length; j<ll; j++) {
+                    //console.log(newRoomUsers[i].googleId, oldRoomUsers[j].googleId)
+                    if(newRoomUsers[i].googleId == oldRoomUsers[j].googleId) {
+                        newUser = false
+                    }
+                }
+                if(newUser) newUsers.push(newRoomUsers[i])
+            }
+            //load new avatars
+            self.updateAvatars(newUsers)
         }
 
-        onPlayerStateChange(e) {
-            console.log(e)
+        //get user avatars from google
+        updateAvatars(users) {
+            for(var i=0, l=users.length; i<l; i++) {
+                getGoogleAvatar(i, users[i].googleId, function(index, img) {
+                    users[index].img = img
+                    console.log('got new avatar')
+                    self.update()
+                })
+            }
+        }
+
+        createPlayer() {
+            //init the youtube player
+            self.player = new YT.Player('yt-player', {
+                videoId: self.room.currentTrack._id,
+                playerVars: {
+                    //start: ??, //TODO: how do we get this? (time to start video at)
+                    autoplay: 1,
+                    controls: 0,
+                    disablekb: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0
+                },
+                events: {
+                    'onStateChange': self.onPlayerStateChange
+                }
+            })
         }
 
         //check if the current user is in the room provided
@@ -180,7 +254,7 @@
         updateRoom(room) {
             //if the next dj should start playing
             var startNewDj = false
-            if(room.currentDj) {
+            if(room.currentDj && self.room) {
                 //the last dj quit while playing
                 if(self.room.currentDj) {
                     if(room.currentDj._id != self.room.currentDj._id) {
@@ -188,28 +262,13 @@
                         startNewDj = true
                     }
                 }
+            } else if(!self.room) {
+                //no self.room defined, first room update
+                startNewDj = true
             }
 
             //update new room data
             self.room = room
-
-            //TODO: refactor to only load new images
-
-            //load audience avatars
-            for(var i=0, l=room.audience.length; i<l; i++) {
-                getGoogleAvatar(i, room.audience[i].googleId, function(index, img) {
-                    room.audience[index].img = img
-                    self.update()
-                })
-            }
-
-            //load dj avatars
-            for(var j=0, l=room.djs.length; j<l; j++) {
-                getGoogleAvatar(j, room.djs[j].googleId, function(index, img) {
-                    room.djs[index].img = img
-                    self.update()
-                })
-            }
 
             //is dj spot open
             self.openDj = room.djs.length < 5 ? true : false
@@ -230,7 +289,13 @@
 
                 //start new dj if old one quit
                 if(startNewDj) {
-                    self.playTrackBy(self.djs[room.currentDj.spot])
+                    self.playTrackBy(room.djs[room.currentDj.spot])
+                }
+            } else {
+                //no djs
+                if(self.player) {
+                    self.player.stopVideo()
+                    self.player.clearVideo()
                 }
             }
 
