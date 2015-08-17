@@ -57,10 +57,9 @@
         <div class="chat">
             <p class="room-name">{room.name}</p>
             <div class="convo">
-                <p class="message"><span class="user">wzrdfght:</span> <span class="text"> Hi everybody!</span></p>
-                <p class="message"><span class="user">ViLLaiN:</span> <span class="text"> All right yes that is possible but unlikey as we agreed right?</span></p>
+                <p each={chatLog} class="message"><span class="user">{username}:</span> <span class="text"> {message}</span></p>
             </div>
-            <input class="chat-box" type="text" placeholder="chat">
+            <input class="chat-box" type="text" placeholder="chat" onkeyup={chatMessageChange} value={chatMessage}>
         </div>
 
         <!-- stage -->
@@ -99,6 +98,7 @@
     <script>
         var self = this
         self.creatingPlaylist = false
+        self.chatLog = []
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
@@ -152,6 +152,38 @@
                 }, self.currentList);
             }
         }
+
+        //listen for chat typing
+        chatMessageChange(e) {
+            self.chatMessage = e.target.value
+            //hit enter key, post to server
+            if(e.keyCode == 13) {
+                socket.emit('chat_message', {
+                    googleId: self.user.googleId,
+                    username: self.user.name,
+                    message: self.chatMessage
+                })
+                //clear message
+                self.chatMessage = ''
+            }
+        }
+
+        //update chat
+        socket.on('new_chat_message', function(newMessage) {
+            var isDj = U.getOne('googleId', newMessage.googleId, self.room.djs);
+            var isAud = U.getOne('googleId', newMessage.googleId, self.room.audience);
+
+            //only update if chatter is in the room
+            if(isDj || isAud) {
+                //dont let the chat log get too long
+                if(self.chatLog.length > 3) {
+                    self.chatLog.shift()
+                }
+                //update chat log
+                self.chatLog.push(newMessage)
+                self.update()
+            }
+        })
 
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {

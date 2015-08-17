@@ -17,6 +17,10 @@ var socket;
 io.on('connection', function (sock) {
     //save socket instance
     socket = sock;
+
+    socket.on('chat_message', function(data) {
+        socket.emit('new_chat_message', data)
+    });
 });
 
 function createServer() {
