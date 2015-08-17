@@ -138,18 +138,18 @@
             } else if(e.data == 0) {
                 //when video ends move it to the end of current djs current playlist
                 //take first track from playlist out
-                var justPlayed = self.currentList.tracks.shift();
+                var justPlayed = self.currentList.tracks.shift()
                 //and add it to the back
-                self.currentList.tracks.push(justPlayed);
-
+                self.currentList.tracks.push(justPlayed)
+                
                 //post new current list order
                 U.ajax('POST', '/api/playlistorder', function(playlist) {
                     //get the next dj spot
                     var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
-                    setCurrentPlaylist(playlist)
-                    self.update()
+                    self.setCurrentPlaylist(playlist)
                     self.playTrackBy(self.room.djs[nextDj])
-                }, self.currentList);
+                    self.update()
+                }, self.currentList)
             }
         }
 
@@ -418,8 +418,11 @@
         //called from first dj stepping up
         //also from when current djs song ends
         playTrackBy(dj) {
+            console.log('playTrackBy:')
+            console.log(dj)
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
+                console.log('putting new track!')
                 //set the next current track to play in the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed

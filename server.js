@@ -19,6 +19,7 @@ io.on('connection', function (sock) {
     socket = sock;
 
     socket.on('chat_message', function(data) {
+        console.log(data.message);
         socket.emit('new_chat_message', data)
     });
 });
@@ -176,7 +177,6 @@ function createServer() {
                 //save room with updated users
                 room.save(function (err) {
                     if (!err) {
-                        console.log('changing room users');
                         res.send(room);
                         socket.emit('room_users_changed', room);
                     } else {
@@ -324,7 +324,6 @@ function createServer() {
                 for(var i=0, l=req.body.tracks.length; i<l; i++) {
                     delete req.body.tracks[i].index;
                 }
-                
                 //update track order
                 playlist.tracks = req.body.tracks;
 
