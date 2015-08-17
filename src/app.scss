@@ -160,3 +160,19 @@ lobby section, room section {
     @include flexbox();
 }
 
+$arrow-size: 5px;
+.arrow-up {
+    width: 0; 
+    height: 0; 
+    border-left: $arrow-size solid transparent;
+    border-right: $arrow-size solid transparent;
+    border-bottom: $arrow-size solid $pink;
+}
+.arrow-down {
+    width: 0; 
+    height: 0; 
+    border-left: $arrow-size solid transparent;
+    border-right: $arrow-size solid transparent;
+    border-top: $arrow-size solid $pink;
+}
+

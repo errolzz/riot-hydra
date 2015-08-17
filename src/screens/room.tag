@@ -21,6 +21,10 @@
             <div class="container {selectingList?'list-open':''}">
                 <div show={currentList && !creatingPlaylist} class="playlists">
                     <div class="dropdown">
+                        <div class="arrow-holder">
+                            <div class="arrow-down"></div>
+                            <div class="arrow-up"></div>
+                        </div>
                         <div class="selected" onclick={openPlaylists}>
                             <p>{currentList.name}</p>
                         </div>

@@ -130,6 +130,15 @@ room {
 
             &.list-open {
                 .dropdown {
+                    .arrow-holder {
+                        .arrow-up {
+                            display: block;
+                            border-bottom: 5px solid $white;
+                        }
+                        .arrow-down {
+                            display: none;
+                        }
+                    }
                     .selected {
                         display: none;
                     }
@@ -149,7 +158,20 @@ room {
         .dropdown {
             margin-bottom: 22px;
             cursor: pointer;
+            position: relative;
 
+            .arrow-holder {
+                position: absolute;
+                pointer-events: none;
+                top: 6px;
+                right: 0px;
+                .arrow-up {
+                    display: none;
+                }
+                .arrow-down {
+                    display: block;
+                }
+            }
             .selected {
                 color: $pink;
             }
