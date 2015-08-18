@@ -155,8 +155,10 @@
         }
 
         stopVideo() {
-            self.player.stopVideo();
-            self.player.clearVideo();
+            if(self.player) {
+                self.player.stopVideo();
+                self.player.clearVideo();
+            }
         }
 
         //listen for chat typing
