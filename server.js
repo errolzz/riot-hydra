@@ -305,7 +305,7 @@ function createServer() {
     app.post('/api/addtrack', function (req, res) {
         Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
             if(!err) {
-                playlist.tracks.unshift(req.body.track);
+                playlist.tracks.push(req.body.track);
                 //save playlist
                 playlist.save(function (err) {
                     return res.send(playlist);
