@@ -120,17 +120,8 @@ function AppStore() {
 
 
     //ROOM
-    self.on('room.left_room', function(room) {
-        //remove user from local room object
-        U.removeOne('_id', self.user._id, room.audience);
-        U.removeOne('_id', self.user._id, room.djs);
-        
-        //update room in db with new audience and djs
-        U.ajax('PUT', '/api/roomusers/' + room._id, function(removedUserFromRoom) {
-            //socket updates room for remain users via room_users_changed
-            //user left room
-            riot.route('lobby');
-        }, {audience: room.audience, djs: room.djs});
+    self.on('room.left_room', function() {
+        riot.route('lobby');
     });
 }
 

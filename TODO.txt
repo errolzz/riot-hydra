@@ -1,0 +1,15 @@
+
+TODO:
+
+
+video progress
+
+current dj skip own video button
+
+change playlist track order
+
+remove track from playlist
+
+search listening rooms
+
+appreciate track

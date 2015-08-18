@@ -83,7 +83,7 @@
                         <button>Start to DJ</button>
                     </div>
                 </div>
-                <button class="quit-dj" show={userIsDj} onclick={quitDj}>Quit DJ</button>
+                <button class="quit-dj" show={userIsDj} onclick={quitDjClicked}>Quit DJ</button>
                 <div class="overlay">
                     <p class="title">{room.currentTrack.title}</p>
                     <button class="like">* Apprecieate Track *</button>
@@ -118,17 +118,7 @@
             })
 
             window.onbeforeunload = function() {
-                //if user was dj, quit dj
-                if(self.userIsDj) {
-                    self.quitDj()
-                }
-                //remove user from local audience
-                U.removeOne('_id', self.user._id, self.room.audience)
-
-                //send updated room djs and audience
-                U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
-                    //updated room is sent via socket as room_users_changed
-                }, {audience: self.room.audience})
+                self.leaveRoom()
             }
 
             //socket will also emit room_users_changed at this point
@@ -136,9 +126,16 @@
 
         //handle youtube player state changes
         onPlayerStateChange(e) {
+            console.log('player changed')
             if(e.data == 2) {
                 //play video immediately if paused
                 self.player.playVideo()
+            } else if(e.data == 1) {
+                console.log('playing vidEO ' + self.room.djs.length)
+                //video is playing
+                if(self.room.djs.length == 0) {
+                    self.stopVideo()
+                }   
             } else if(e.data == 0) {
                 //when video ends move it to the end of current djs current playlist
                 //take first track from playlist out
@@ -155,6 +152,11 @@
                     self.update()
                 }, self.currentList)
             }
+        }
+
+        stopVideo() {
+            self.player.stopVideo();
+            self.player.clearVideo();
         }
 
         //listen for chat typing
@@ -191,9 +193,7 @@
 
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
-            console.log('room_users_changed');
             if(self.userInRoom(updatedRoom)) {
-                console.log('im in the room');
                 //if the room is already loaded
                 if(self.room) {
                     //update new audience avatars
@@ -219,17 +219,19 @@
 
         //listen for track changes
         socket.on('room_track_changed', function(updatedRoom) {
+            console.log(updatedRoom)
             if(self.userInRoom(updatedRoom)) {
                 //load youtube player with current track
                 self.room = updatedRoom
 
-                //play the current track
+                //play the current track if there is one
                 if(self.player) {
                     self.player.loadVideoById(self.room.currentTrack._id)
+                    self.player.playVideo();
                 } else {
                     self.createPlayer()
                 }
-                
+
                 self.update()
             }
         })
@@ -267,6 +269,12 @@
                 videoId: self.room.currentTrack._id,
                 playerVars: {
                     //start: ??, //TODO: how do we get this? (time to start video at)
+                    /*
+                        save latest video start date in db
+                        when user enters, compare enter date with start date
+                        convert to seconds
+                        start video from there
+                    */
                     autoplay: 1,
                     controls: 0,
                     disablekb: 1,
@@ -337,8 +345,7 @@
             } else {
                 //no djs
                 if(self.player) {
-                    self.player.stopVideo()
-                    self.player.clearVideo()
+                    self.stopVideo()
                 }
             }
 
@@ -365,19 +372,28 @@
             }, {audience: self.room.audience, djs: self.room.djs})
         }
 
+        quitDjClicked(e) {
+            self.quitDj(true)
+        }
+
         //quit as dj
-        quitDj(e) {
+        quitDj(stayInRoom) {
             //remove user from local djs
             U.removeOne('_id', self.user._id, self.room.djs)
             //add user to local audience
             self.room.audience.push(self.user)
             //hide become dj button
             self.openDj = true
+            //if you were the last dj, clear current track
+            if(self.room.djs.length == 0) {
+                self.room.currentTrack = undefined
+            }
 
-            //send updated room djs and audience
-            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
-                //updated room is sent via socket as room_users_changed
-            }, {audience: self.room.audience, djs: self.room.djs})
+            if(stayInRoom) {
+                U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                    //updated room is sent via socket as room_users_changed
+                }, {audience: self.room.audience, djs: self.room.djs})
+            }
         }
 
         //select a playlist 
@@ -395,7 +411,7 @@
             U.ajax('GET', listUrl, function(lists) {
                 self.playlists = lists
                 self.selectingList = true
-                self.update();
+                self.update()
             })
         }
 
@@ -416,17 +432,27 @@
 
         //go back to the lobby
         leaveRoom(e) {
-            RiotControl.trigger('room.left_room', self.room)
+            //if user was dj, quit dj
+            if(self.userIsDj) self.quitDj()
+
+            //remove user from local audience
+            U.removeOne('_id', self.user._id, self.room.audience)
+
+            //clear video
+            self.stopVideo()
+
+            //send updated room djs and audience
+            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                //updated room is sent via socket as room_users_changed
+                RiotControl.trigger('room.left_room')
+            }, {audience: self.room.audience, djs: self.room.djs})
         }
 
         //called from first dj stepping up
         //also from when current djs song ends
         playTrackBy(dj) {
-            console.log('playTrackBy:')
-            console.log(dj)
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
-                console.log('putting new track!')
                 //set the next current track to play in the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
