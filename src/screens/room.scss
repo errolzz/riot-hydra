@@ -197,14 +197,14 @@ room {
                 margin-bottom: 22px;
                 .num {
                     display: inline-block;
-                    width: 20px;
+                    width: 16px;
                     color: $gray-med;
                 }
                 .delete {
                     display: none;
                     @include action-text();
                     text-transform: uppercase;
-                    width: 20px;
+                    width: 16px;
                     font-weight: 700;
                 }
                 &:hover {

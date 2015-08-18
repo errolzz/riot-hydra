@@ -135,7 +135,6 @@ function createServer() {
     //update a rooms users
     app.put('/api/roomusers/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
-
             //update room audience
             if(req.body.audience) {
                 room.audience = req.body.audience;
@@ -324,6 +323,7 @@ function createServer() {
                 for(var i=0, l=playlist.tracks.length; i<l; i++) {
                     if(playlist.tracks[i]._id == req.body.trackId) {
                         playlist.tracks.splice(i, 1);
+                        break;
                     }
                 }
                 //save playlist

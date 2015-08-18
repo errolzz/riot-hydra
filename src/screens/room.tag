@@ -109,16 +109,10 @@
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
-
-            var listUrl = '/api/playlists/'
-            listUrl += self.user.playlists.join(',')
+            self.room = room
 
             //get users playlists
-            U.ajax('GET', listUrl, function(lists) {
-                self.setCurrentPlaylist(lists[0])
-                self.playlists = lists
-                self.updateRoom(self.room)
-            })
+            self.getUserPlaylists()
 
             window.onbeforeunload = function() {
                 self.leaveRoom()
@@ -128,9 +122,21 @@
         })
 
         RiotControl.on('force_leave_room', function() {
-            console.log('force leave room')
             self.leaveRoom()
         })
+
+        //gets the users playlist data
+        getUserPlaylists(callback) {
+            var listUrl = '/api/playlists/'
+            listUrl += self.user.playlists.join(',')
+
+            U.ajax('GET', listUrl, function(lists) {
+                self.setCurrentPlaylist(lists[0])
+                self.playlists = lists
+                self.updateRoom(self.room)
+                if(callback) callback()
+            })
+        }
 
         //handle youtube player state changes
         onPlayerStateChange(e) {
@@ -203,7 +209,9 @@
 
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
+            console.log('room_users_changed ')
             if(self.userInRoom(updatedRoom)) {
+                console.log('user in room')
                 //if the room is already loaded
                 if(self.room) {
                     //update new audience avatars
@@ -444,6 +452,7 @@
         leaveRoomClicked(e) {
             self.leaveRoom(true)
         }
+
         //go back to the lobby
         leaveRoom(forceLobby) {
             //if user was dj, quit dj
