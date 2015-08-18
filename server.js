@@ -316,6 +316,26 @@ function createServer() {
         });
     });
 
+    //remove a track from a playlist
+    app.post('/api/removetrack', function (req, res) {
+        Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
+            if(!err) {
+                //remove track from playlist
+                for(var i=0, l=playlist.tracks.length; i<l; i++) {
+                    if(playlist.tracks[i]._id == req.body.trackId) {
+                        playlist.tracks.splice(i, 1);
+                    }
+                }
+                //save playlist
+                playlist.save(function (err) {
+                    return res.send(playlist);
+                });
+            } else {
+                console.log(err);
+            }
+        });
+    });
+
     //when a track finishes playing, move it to last in list
     app.post('/api/playlistorder', function (req, res) {
         Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {

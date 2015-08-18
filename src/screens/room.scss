@@ -194,10 +194,27 @@ room {
 
         .tracks {
             li {
+                margin-bottom: 22px;
                 .num {
+                    display: inline-block;
+                    width: 20px;
                     color: $gray-med;
                 }
-                margin-bottom: 22px;
+                .delete {
+                    display: none;
+                    @include action-text();
+                    text-transform: uppercase;
+                    width: 20px;
+                    font-weight: 700;
+                }
+                &:hover {
+                    .num {
+                        display: none;
+                    }
+                    .delete {
+                        display: inline-block;
+                    }
+                }
             }
         }
 

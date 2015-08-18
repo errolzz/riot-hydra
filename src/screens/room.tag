@@ -40,7 +40,10 @@
                     </div>
                     <div class="track-holder">
                         <ul class="tracks">
-                            <li each={currentList.tracks}><span class="num">{index}.</span> {title}</li>
+                            <li each={currentList.tracks}>
+                                <span class="delete" title="Delete" onclick={removeFromPlaylist}>x</span>
+                                <span class="num">{index}.</span> {title}
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -329,7 +332,8 @@
             self.room = room
 
             //is dj spot open
-            self.openDj = room.djs.length < 5 ? true : false
+            self.checkOpenDjSpot()
+
             //if you are djing, no open dj spot
             if(U.getOne('_id', self.user._id, room.djs)) {
                 self.openDj = false
@@ -500,6 +504,19 @@
                 list.tracks[i].index = i + 1
             }
             self.currentList = list
+            self.checkOpenDjSpot()
+            self.update()
+        }
+
+        checkOpenDjSpot() {
+            //if user doesnt have any tracks in their playlist
+            if(self.currentList) {
+                if(self.currentList.tracks.length < 1 || self.room.djs.length >= 5) {
+                    self.openDj = false
+                } else {
+                    self.openDj = true
+                }
+            }
         }
 
         searchChanged(e) {
@@ -578,5 +595,19 @@
                 self.update()
             }, trackData)
         }
+
+        removeFromPlaylist(e) {
+            U.ajax('POST', '/api/removetrack', function(updatedPlylist) {
+                self.setCurrentPlaylist(updatedPlylist)
+                self.update()
+            }, {
+                playlistId: self.currentList._id,
+                trackId: e.item._id
+            })
+        }
     </script>
 </room>
+
+
+
+
