@@ -14,6 +14,32 @@ U.removeOne = function(prop, value, list) {
         }
     }
 }
+U.getItemIndex = function(prop, value, list) {
+    for(var i=0, l=list.length; i<l; i++) {
+        if(list[i][prop] == value) {
+            return i;
+        }
+    }
+}
+U.getElementIndex = function(node) {
+    var index = 0;
+    while ( (node = node.previousSibling) ) {
+        if (node.nodeType != 3 || !/^\s*$/.test(node.data)) {
+            index++;
+        }
+    }
+    return index;
+}
+U.hasClass = function(element, cls) {
+    return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
+}
+U.moveListItem = function(list, oldIndex, newIndex) {
+    if(newIndex <= list.length) {
+        var item = list.splice(oldIndex, 1)[0]
+        list.splice(newIndex, 0, item)
+        return list
+    }
+}
 U.getCookie = function(cname) {
     var name = cname + "=";
     var ca = document.cookie.split(';');

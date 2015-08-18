@@ -337,6 +337,7 @@ function createServer() {
     });
 
     //when a track finishes playing, move it to last in list
+    //when a user changes the order of their playlist
     app.post('/api/playlistorder', function (req, res) {
         Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
             if(!err) {

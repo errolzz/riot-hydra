@@ -195,6 +195,7 @@ room {
         .tracks {
             li {
                 margin-bottom: 22px;
+                position: relative;
                 .num {
                     display: inline-block;
                     width: 16px;
@@ -207,6 +208,24 @@ room {
                     width: 16px;
                     font-weight: 700;
                 }
+                .title {
+                    padding-right: 20px;
+                    cursor: ns-resize;
+                    max-width: calc(100% - 30px);
+                    display: inline-block;
+                    vertical-align: top;
+                }
+                .arrow-up {
+                    position: absolute;
+                    display: none;
+                    float: right;
+                    top: 8px;
+                    right: 0px;
+                    cursor: pointer;
+                    &:hover {
+                        border-bottom: $arrow-size solid $white;
+                    }
+                }
                 &:hover {
                     .num {
                         display: none;
@@ -214,6 +233,13 @@ room {
                     .delete {
                         display: inline-block;
                     }
+                    .arrow-up {
+                        display: block;
+                    }
+                }
+                &.dragging {
+                    background: $pink;
+                    z-index: 100;
                 }
             }
         }

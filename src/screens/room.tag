@@ -18,7 +18,7 @@
             </div>
 
             <!-- playlists -->
-            <div class="container {selectingList?'list-open':''}">
+            <div id="playlists" class="container {selectingList?'list-open':''}">
                 <div show={currentList && !creatingPlaylist} class="playlists">
                     <div class="dropdown">
                         <div class="arrow-holder">
@@ -40,9 +40,11 @@
                     </div>
                     <div class="track-holder">
                         <ul class="tracks">
-                            <li each={currentList.tracks}>
+                            <li class="playlist-track" each={currentList.tracks} onmousedown={startTrackDrag}>
                                 <span class="delete" title="Delete" onclick={removeFromPlaylist}>x</span>
-                                <span class="num">{index}.</span> {title}
+                                <span class="num">{index}.</span> 
+                                <span class="title">{title}</span>
+                                <span class="arrow-up" onclick={moveTrackToTop}></span>
                             </li>
                         </ul>
                     </div>
@@ -209,9 +211,7 @@
 
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
-            console.log('room_users_changed ')
             if(self.userInRoom(updatedRoom)) {
-                console.log('user in room')
                 //if the room is already loaded
                 if(self.room) {
                     //update new audience avatars
@@ -613,6 +613,76 @@
                 playlistId: self.currentList._id,
                 trackId: e.item._id
             })
+        }
+
+        startTrackDrag(e) {
+            var t = e.currentTarget
+            var startY = e.clientY
+            var oldClass = t.className
+            var newSpot = oldSpot = e.item.index - 1
+            
+            t.className = t.className + ' dragging'
+
+            //follow mouse move
+            document.onmousemove = function(e) {
+                t.style.top = (e.clientY - startY) + 'px'
+                t.style.pointerEvents = 'none'
+            }
+
+            //on release
+            document.body.onmouseup = function(e) {
+
+                //find parent playlist-track
+                if(U.hasClass(e.target.parentElement, 'playlist-track')) {
+                    //get playlist-track index
+                    newSpot = U.getElementIndex(e.target.parentElement)
+                } else if(U.hasClass(e.target, 'playlist-track')) {
+                    newSpot = U.getElementIndex(e.target)
+                } else {
+                    //do nothing
+                }
+                
+                t.className = oldClass
+                t.style.top = '0px';
+
+                //reorder track array with track in newSpot position
+                U.moveListItem(self.currentList.tracks, oldSpot, newSpot)
+                self.setCurrentPlaylist(self.currentList)
+                self.update()
+
+                //post new current list order
+                U.ajax('POST', '/api/playlistorder', function(playlist) {
+                    self.setCurrentPlaylist(playlist)
+                    self.update()
+                }, self.currentList)
+
+                self.stopDrag()
+                t.style.pointerEvents = 'auto'
+            }
+        }
+
+        stopDrag() {
+            //remove handlers
+            document.body.onmouseup = undefined
+            document.onmousemove = undefined
+            document.getElementById('playlists').mouseleave = undefined
+        }
+
+        moveTrackToTop(e) {
+            self.stopDrag()
+
+            //remove topped item
+            var track = self.currentList.tracks.splice(e.item.index - 1, 1)[0]
+            self.currentList.tracks.unshift(track)
+
+            //set new playlist order
+            self.setCurrentPlaylist(self.currentList)
+
+            //post new current list order
+            U.ajax('POST', '/api/playlistorder', function(playlist) {
+                self.setCurrentPlaylist(playlist)
+                self.update()
+            }, self.currentList)
         }
     </script>
 </room>
