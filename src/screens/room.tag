@@ -53,7 +53,7 @@
                     <button class="create-btn" type="button" onclick={createPlaylist}>Create</button>
                 </div>
 
-                <p class="user"><span class="name">{user.name}</span> - <span class="leave" onclick={leaveRoom}>Leave room</span></p>
+                <p class="user"><span class="name">{user.name}</span> - <span class="leave" onclick={leaveRoomClicked}>Leave room</span></p>
             </div>
         </div>
 
@@ -122,6 +122,11 @@
             }
 
             //socket will also emit room_users_changed at this point
+        })
+
+        RiotControl.on('force_leave_room', function() {
+            console.log('force leave room')
+            self.leaveRoom()
         })
 
         //handle youtube player state changes
@@ -432,8 +437,11 @@
             self.newPlaylistName = e.target.value
         }
 
+        leaveRoomClicked(e) {
+            self.leaveRoom(true)
+        }
         //go back to the lobby
-        leaveRoom(e) {
+        leaveRoom(forceLobby) {
             //if user was dj, quit dj
             if(self.userIsDj) self.quitDj()
 
@@ -443,10 +451,14 @@
             //clear video
             self.stopVideo()
 
+            //clear chat
+            self.chatLog = []
+            console.log('leaving room')
             //send updated room djs and audience
             U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
-                RiotControl.trigger('room.left_room')
+                //if leaving room from leave room link, switch to lobby
+                if(forceLobby) RiotControl.trigger('room.left_room')
             }, {audience: self.room.audience, djs: self.room.djs})
         }
 

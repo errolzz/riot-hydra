@@ -43,6 +43,13 @@ function AppStore() {
     self.on('app.app_mounted', function() {
 
         riot.route(function(p1, p2, p3) {
+            
+            if(self.inRoom) self.trigger('force_leave_room');
+
+            //DEFAULT LOGIN
+
+            //start out not in a room
+            self.inRoom = false;
 
             if(p1 == 'lobby') {
                 //ENTER THE LOBBY
@@ -56,6 +63,8 @@ function AppStore() {
             } else if(p1 == 'room') {
                 //ENTER A ROOM
 
+                self.inRoom = true;
+                
                 //get latest list of rooms
                 U.ajax('GET', '/api/rooms/' + p2, function(room) {
                     //if room is valid
@@ -121,6 +130,7 @@ function AppStore() {
 
     //ROOM
     self.on('room.left_room', function() {
+        self.inRoom = false;
         riot.route('lobby');
     });
 }

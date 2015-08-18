@@ -1,5 +1,8 @@
 
+
 TODO:
+------------------------------------------------------------------------
+
 
 
 video progress
@@ -13,3 +16,9 @@ remove track from playlist
 search listening rooms
 
 appreciate track
+
+mute current track
+
+set up video players in search results
+
+auto mute current track while playing search result video
