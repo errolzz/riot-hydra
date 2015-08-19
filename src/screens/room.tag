@@ -92,6 +92,10 @@
                 <div class="overlay">
                     <p class="title">{room.currentTrack.title}</p>
                     <button class="like">* Apprecieate Track *</button>
+                    <div class="progress-bar">
+                        <div class="bg"></div>
+                        <div class="bar"></div>
+                    </div>
                 </div>
             </div>
             <div class="audience">
@@ -142,16 +146,19 @@
 
         //handle youtube player state changes
         onPlayerStateChange(e) {
-            console.log('player changed')
             if(e.data == 2) {
                 //play video immediately if paused
                 self.player.playVideo()
             } else if(e.data == 1) {
-                console.log('playing vidEO ' + self.room.djs.length)
                 //video is playing
                 if(self.room.djs.length == 0) {
                     self.stopVideo()
-                }   
+                }
+                //start progress bar
+                self.progressTimer = setInterval(function() {
+                    var percent = self.player.getCurrentTime() / self.player.getDuration()
+                    document.getElementById('#bar').style.width = percent + '%'
+                }, 100)
             } else if(e.data == 0) {
                 //when video ends move it to the end of current djs current playlist
                 //take first track from playlist out
@@ -237,7 +244,6 @@
 
         //listen for track changes
         socket.on('room_track_changed', function(updatedRoom) {
-            console.log(updatedRoom)
             if(self.userInRoom(updatedRoom)) {
                 //load youtube player with current track
                 self.room = updatedRoom
@@ -478,6 +484,9 @@
         //called from first dj stepping up
         //also from when current djs song ends
         playTrackBy(dj) {
+            //reset player progress
+            clearInterval(self.progressTimer)
+            
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
                 //set the next current track to play in the room
