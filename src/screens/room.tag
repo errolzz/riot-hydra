@@ -91,10 +91,11 @@
                 <button class="quit-dj" show={userIsDj} onclick={quitDjClicked}>Quit DJ</button>
                 <div class="overlay">
                     <p class="title">{room.currentTrack.title}</p>
-                    <button class="like">* Apprecieate Track *</button>
+                    <button class="skip" show={userIsPlayling} onclick={startNextTrack}>Skip song</button>
+                    <button class="like">* Apprecieate track *</button>
                     <div class="progress-bar">
                         <div class="bg"></div>
-                        <div class="bar"></div>
+                        <div id="progress-bar" class="bar"></div>
                     </div>
                 </div>
             </div>
@@ -156,10 +157,24 @@
                 }
                 //start progress bar
                 self.progressTimer = setInterval(function() {
-                    var percent = self.player.getCurrentTime() / self.player.getDuration()
-                    document.getElementById('#bar').style.width = percent + '%'
-                }, 100)
+                    var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
+                    document.getElementById('progress-bar').style.width = percent + '%'
+                }, 50)
             } else if(e.data == 0) {
+                self.startNextTrack()
+            }
+        }
+
+        stopVideo() {
+            if(self.player) {
+                self.player.stopVideo();
+                self.player.clearVideo();
+            }
+        }
+
+        startNextTrack() {
+            //check if user was dj
+            if(self.userIsPlayling) {
                 //when video ends move it to the end of current djs current playlist
                 //take first track from playlist out
                 var justPlayed = self.currentList.tracks.shift()
@@ -174,13 +189,11 @@
                     self.playTrackBy(self.room.djs[nextDj])
                     self.update()
                 }, self.currentList)
-            }
-        }
-
-        stopVideo() {
-            if(self.player) {
-                self.player.stopVideo();
-                self.player.clearVideo();
+            } else {
+                //if user is not dj
+                var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
+                self.playTrackBy(self.room.djs[nextDj])
+                self.update()
             }
         }
 
@@ -345,16 +358,16 @@
             //update new room data
             self.room = room
 
-            //is dj spot open
-            self.checkOpenDjSpot()
-
             //if you are djing, no open dj spot
             if(U.getOne('_id', self.user._id, room.djs)) {
-                self.openDj = false
                 self.userIsDj = true
             } else {
                 self.userIsDj = false
             }
+
+            //is dj spot open
+            self.checkOpenDjSpot()
+
 
             //if the room has a dj currently playing a track
             if(room.currentDj != undefined) {
@@ -403,6 +416,7 @@
 
         //quit as dj
         quitDj(stayInRoom) {
+            self.userIsPlayling = false
             //remove user from local djs
             U.removeOne('_id', self.user._id, self.room.djs)
             //add user to local audience
@@ -484,11 +498,15 @@
         //called from first dj stepping up
         //also from when current djs song ends
         playTrackBy(dj) {
+            //reset uesr playing
+            self.userIsPlayling = false
+
             //reset player progress
             clearInterval(self.progressTimer)
             
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
+                self.userIsPlayling = true
                 //set the next current track to play in the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
@@ -527,11 +545,10 @@
         }
 
         checkOpenDjSpot() {
+            self.openDj = false
             //if user doesnt have any tracks in their playlist
             if(self.currentList) {
-                if(self.currentList.tracks.length < 1 || self.room.djs.length >= 5) {
-                    self.openDj = false
-                } else {
+                if(self.currentList.tracks.length > 0 && self.room.djs.length < 5 && !self.userIsDj) {
                     self.openDj = true
                 }
             }

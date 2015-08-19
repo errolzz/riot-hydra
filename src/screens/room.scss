@@ -387,6 +387,11 @@ room {
                     right: 0px;
                     top: 42px;
                 }
+                .skip {
+                    position: absolute;
+                    bottom: 10px;
+                    left: 0px;
+                }
                 .progress-bar {
                     position: absolute;
                     bottom: 0px;
@@ -407,7 +412,7 @@ room {
                         left: 0px;
                         width: 0;
                         height: 10px;
-                        background: $pink;
+                        background: $highlight;
                     }
                 }
             }

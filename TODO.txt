@@ -5,9 +5,8 @@ TODO:
 
 
 
-video progress
+set video start time for user when they enter room
 
-current dj skip own video button
 
 search listening rooms
 
