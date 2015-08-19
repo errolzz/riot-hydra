@@ -5,8 +5,6 @@ TODO:
 
 
 
-set video start time for user when they enter room
-
 
 search listening rooms
 

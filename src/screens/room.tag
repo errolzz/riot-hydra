@@ -91,7 +91,7 @@
                 <button class="quit-dj" show={userIsDj} onclick={quitDjClicked}>Quit DJ</button>
                 <div class="overlay">
                     <p class="title">{room.currentTrack.title}</p>
-                    <button class="skip" show={userIsPlayling} onclick={startNextTrack}>Skip song</button>
+                    <button class="skip" show={userIsPlayling} onclick={prepNextTrack}>Skip song</button>
                     <button class="like">* Apprecieate track *</button>
                     <div class="progress-bar">
                         <div class="bg"></div>
@@ -151,6 +151,11 @@
                 //play video immediately if paused
                 self.player.playVideo()
             } else if(e.data == 1) {
+                //get time passed in seconds from current track start date to now
+                var startTime = 0
+                startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
+                self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
+
                 //video is playing
                 if(self.room.djs.length == 0) {
                     self.stopVideo()
@@ -161,7 +166,7 @@
                     document.getElementById('progress-bar').style.width = percent + '%'
                 }, 50)
             } else if(e.data == 0) {
-                self.startNextTrack()
+                self.prepNextTrack()
             }
         }
 
@@ -172,7 +177,7 @@
             }
         }
 
-        startNextTrack() {
+        prepNextTrack() {
             //check if user was dj
             if(self.userIsPlayling) {
                 //when video ends move it to the end of current djs current playlist
@@ -305,13 +310,6 @@
             self.player = new YT.Player('yt-player', {
                 videoId: self.room.currentTrack._id,
                 playerVars: {
-                    //start: ??, //TODO: how do we get this? (time to start video at)
-                    /*
-                        save latest video start date in db
-                        when user enters, compare enter date with start date
-                        convert to seconds
-                        start video from there
-                    */
                     autoplay: 1,
                     controls: 0,
                     disablekb: 1,
@@ -352,6 +350,7 @@
                 }
             } else if(!self.room) {
                 //no self.room defined, first room update
+                //this starts the current track video when entering a room
                 startNewDj = true
             }
 
@@ -372,11 +371,12 @@
             //if the room has a dj currently playing a track
             if(room.currentDj != undefined) {
                 //loop through djs to set which is playing
+                //this is only to update the dj avatar isPlaying vertical position
                 for(var i=0, l=room.djs.length; i<l; i++) {
                     room.djs[room.currentDj.spot].isPlaying = true
                 }
 
-                //start new dj if old one quit
+                //strat the video if needed
                 if(startNewDj) {
                     self.playTrackBy(room.djs[room.currentDj.spot])
                 }
@@ -510,7 +510,7 @@
                 //set the next current track to play in the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
-                }, {track: self.currentList.tracks[0]})
+                }, {track: self.currentList.tracks[0], date: new Date().toString()})
             }
         }
 

@@ -116,13 +116,16 @@ function createServer() {
         });
     });
 
+    //set the current track to play in the room
     app.put('/api/roomtrack/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
+            //set the main track info
             room.currentTrack = req.body.track;
-
+            //set the time the track was set as current
+            room.currentTrack.date = req.body.date;
+            //save the room with new current track
             room.save(function(err) {
                 if(!err) {
-                    console.log('updated room track');
                     res.send(room);
                     socket.emit('room_track_changed', room);
                 } else {
@@ -414,7 +417,7 @@ var roomSchema = mongoose.Schema({
     audience:       {type: Array}, //holds User models
     djs:            {type: Array}, //holds User models
     currentDj:      {type: Object}, //{spot: array-index, _id: user-id}
-    currentTrack:   {type: Object} //youtube video id and name
+    currentTrack:   {type: Object} //youtube video id, name, and start date
 });
 
 //init models
