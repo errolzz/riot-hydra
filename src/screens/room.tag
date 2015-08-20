@@ -116,10 +116,16 @@
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
-            self.room = room
+            //let self.room get set in updateRoom
 
             //get users playlists
-            self.getUserPlaylists()
+            self.getUserPlaylists(function() {
+                //update room after lists are loaded
+                self.updateRoom(room)
+
+                //set up youtube player
+                self.setupPlayer(room)
+            })
 
             window.onbeforeunload = function() {
                 self.leaveRoom()
@@ -140,7 +146,6 @@
             U.ajax('GET', listUrl, function(lists) {
                 self.setCurrentPlaylist(lists[0])
                 self.playlists = lists
-                self.updateRoom(self.room)
                 if(callback) callback()
             })
         }
@@ -151,23 +156,27 @@
                 //play video immediately if paused
                 self.player.playVideo()
             } else if(e.data == 1) {
-                //get time passed in seconds from current track start date to now
-                var startTime = 0
-                startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
-                self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
+                if(self.lastVideoState != 1 && self.lastVideoState != 3) {
+                    //get time passed in seconds from current track start date to now
+                    var startTime = 0
+                    startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
+                    self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
+                    console.log('jumping to ' + startTime)
+                }
 
                 //video is playing
                 if(self.room.djs.length == 0) {
                     self.stopVideo()
                 }
                 //start progress bar
-                self.progressTimer = setInterval(function() {
-                    var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
-                    document.getElementById('progress-bar').style.width = percent + '%'
-                }, 50)
+                var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
+                document.getElementById('progress-bar').style.width = percent + '%'
             } else if(e.data == 0) {
                 self.prepNextTrack()
             }
+
+            //save video state
+            self.lastVideoState = e.data
         }
 
         stopVideo() {
@@ -246,7 +255,7 @@
                 } else {
                     //load all dj avatars
                     self.updateAvatars(updatedRoom.djs)
-                    //load all audience avatars
+                    //load all audience (avatars
                     self.updateAvatars(updatedRoom.audience)
                 }
 
@@ -262,13 +271,18 @@
 
         //listen for track changes
         socket.on('room_track_changed', function(updatedRoom) {
-            if(self.userInRoom(updatedRoom)) {
-                //load youtube player with current track
-                self.room = updatedRoom
+            self.setupPlayer(updatedRoom)
+        })
 
+        //set up player to play a video
+        setupPlayer(room) {
+            //if user is in the room, and there is a current track
+            if(self.userInRoom(room) && room.currentTrack) {
+                //load youtube player with current track
+                self.room = room
                 //play the current track if there is one
                 if(self.player) {
-                    self.player.loadVideoById(self.room.currentTrack._id)
+                    self.player.loadVideoById(room.currentTrack._id)
                     self.player.playVideo();
                 } else {
                     self.createPlayer()
@@ -276,7 +290,7 @@
 
                 self.update()
             }
-        })
+        }
 
         //check which users avatars have not yet loaded
         findNewAvatars(oldRoomUsers, newRoomUsers) {
@@ -284,7 +298,6 @@
             for(var i=0, l=newRoomUsers.length; i<l; i++) {
                 var newUser = true
                 for(var j=0, ll=oldRoomUsers.length; j<ll; j++) {
-                    //console.log(newRoomUsers[i].googleId, oldRoomUsers[j].googleId)
                     if(newRoomUsers[i].googleId == oldRoomUsers[j].googleId) {
                         newUser = false
                     }
@@ -306,6 +319,7 @@
         }
 
         createPlayer() {
+            console.log('player created')
             //init the youtube player
             self.player = new YT.Player('yt-player', {
                 videoId: self.room.currentTrack._id,
@@ -502,7 +516,7 @@
             self.userIsPlayling = false
 
             //reset player progress
-            clearInterval(self.progressTimer)
+            //clearInterval(self.progressTimer)
             
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {

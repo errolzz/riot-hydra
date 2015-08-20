@@ -417,7 +417,7 @@ var roomSchema = mongoose.Schema({
     audience:       {type: Array}, //holds User models
     djs:            {type: Array}, //holds User models
     currentDj:      {type: Object}, //{spot: array-index, _id: user-id}
-    currentTrack:   {type: Object} //youtube video id, name, and start date
+    currentTrack:   {type: Object} //youtube video id, title, and start date
 });
 
 //init models
@@ -437,7 +437,7 @@ db.once('open', function() {
         googleId: '1232423434',
         name: 'TIM the !',
         nameLower: 'tim the !',
-        playlists: []
+        playlists: ['55d0b383eedcd203b58c10b4']
     });
     u1.save(function(err) {console.log('created')});
 
@@ -456,10 +456,12 @@ db.once('open', function() {
         name: 'Torture',
         nameLower: 'torture',
         privateRoom: false,
+        currentDj: {spot: 0, _id: '1232423434'},
+        currentTrack: {title: 'Mos Fake', _id: 'zTBIvIDnnv8', date: new Date().toString()},
         audience: [
-            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+            
         ],
-        djs: [],
+        djs: [{googleId: '1232423434', name: 'TIM the !', nameLower: 'tim the !'}],
         currentDj: undefined
     });
     var r3 = new Room({
