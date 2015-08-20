@@ -28,7 +28,10 @@
             <p class="error" show={error}>{error}</p>
 
             <p class="private-label">Make it a private room?</p>
-            <div class="private"><input type="checkbox" value="private" onclick={togglePrivateRoom}> yes</div>
+            <div class="private">
+                <input id="private-id" type="checkbox" value="private" onclick={togglePrivateRoom}> 
+                <label for="private-id">yes</label>
+            </div>
 
             <p class="cancel-btn" onclick={closeCreate}>Cancel</p>
             <button class="create-btn" type="button" onclick={createRoom}>Create</button>

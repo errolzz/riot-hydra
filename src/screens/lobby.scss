@@ -99,6 +99,9 @@ lobby {
         }
         .private {
             margin-bottom: 50px;
+            label {
+                cursor: pointer;
+            }
         }
         .cancel-btn {
             @include action-text();

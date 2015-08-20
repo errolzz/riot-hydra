@@ -87,7 +87,8 @@ function AppStore() {
                         }, {audience: room.audience});
                     } else {
                         //invalid room id, go back to lobby
-                        riot.route('lobby');
+                        self.inRoom = false
+                        riot.route('lobby')
                     }
                 });
             }
@@ -102,7 +103,6 @@ function AppStore() {
             if(data.googleId) {
                 //update local user
                 self.user = data;
-                console.log(self.user);
                 riot.route('lobby');
             }
         }, user);

@@ -118,6 +118,8 @@
             self.user = user
             //let self.room get set in updateRoom
 
+            console.log('render_room')
+
             //get users playlists
             self.getUserPlaylists(function() {
                 //update room after lists are loaded
@@ -496,6 +498,8 @@
 
         //go back to the lobby
         leaveRoom(forceLobby) {
+            window.onbeforeunload = undefined
+
             //if user was dj, quit dj
             if(self.userIsDj) self.quitDj()
 
