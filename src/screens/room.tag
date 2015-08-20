@@ -65,7 +65,7 @@
         <!-- chat -->
         <div class="chat">
             <p class="room-name">{room.name}</p>
-            <div class="convo">
+            <div id="convo" class="convo">
                 <p each={chatLog} class="message"><span class="user">{username}:</span> <span class="text"> {message}</span></p>
             </div>
             <input class="chat-box" type="text" placeholder="chat" onkeyup={chatMessageChange} value={chatMessage}>
@@ -214,12 +214,13 @@
         //listen for chat typing
         chatMessageChange(e) {
             self.chatMessage = e.target.value
+
             //hit enter key, post to server
-            if(e.keyCode == 13) {
+            if(e.keyCode == 13 && self.chatMessage.trim().length > 0) {
                 socket.emit('chat_message', {
                     googleId: self.user.googleId,
                     username: self.user.name,
-                    message: self.chatMessage
+                    message: encodeURIComponent(self.chatMessage.trim())
                 })
                 //clear message
                 self.chatMessage = ''
@@ -230,16 +231,22 @@
         socket.on('new_chat_message', function(newMessage) {
             var isDj = U.getOne('googleId', newMessage.googleId, self.room.djs);
             var isAud = U.getOne('googleId', newMessage.googleId, self.room.audience);
-
+            
             //only update if chatter is in the room
             if(isDj || isAud) {
                 //dont let the chat log get too long
-                if(self.chatLog.length > 3) {
+                if(self.chatLog.length > 200) {
                     self.chatLog.shift()
                 }
+
+                newMessage.message = decodeURIComponent(newMessage.message)
+
                 //update chat log
                 self.chatLog.push(newMessage)
                 self.update()
+
+                //scroll chat to bottom
+                document.getElementById('convo').scrollTop = 10000;
             }
         })
 

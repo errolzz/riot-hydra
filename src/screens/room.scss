@@ -313,6 +313,9 @@ room {
         }
 
         .convo {
+            overflow-y: scroll;
+            height: calc(100% - 101px); //19 + 40 + 42;
+
             .message {
                 margin-bottom: 22px;
                 .user {
