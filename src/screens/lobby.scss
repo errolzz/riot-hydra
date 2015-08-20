@@ -52,6 +52,10 @@ lobby {
             }
         }
 
+        .rooms {
+            overflow-y: scroll;
+            height: calc(100% - 141px); //47 + 54 + 40
+        }
         li {
             @include action-text();
             overflow: auto;

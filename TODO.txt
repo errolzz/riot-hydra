@@ -5,8 +5,6 @@ TODO:
 
 
 
-search listening rooms
-
 appreciate track
 
 mute current track

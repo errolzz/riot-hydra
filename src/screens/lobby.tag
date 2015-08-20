@@ -7,18 +7,20 @@
         </div>
         <div class="room-list">
             <div class="lobby-control">
-                <input type="text" placeholder="search rooms">
+                <input type="text" placeholder="search rooms" onkeyup={searchChange} value={roomSearch}>
                 <p class="or">or</p>
                 <p class="create-link" onclick={openCreate}>+ Create new room</p>
             </div>
-            <ul>
-                <li each={ rooms }>
-                    <div class="room-label" onclick={parent.roomClick}>
-                        <p class="name">{name}</p>
-                        <p class="count">({djs.length + audience.length} Listeners)</p>
-                    </div>
-                </li>
-            </ul>
+            <div class="rooms">
+                <ul>
+                    <li each={rooms} hide={hide}>
+                        <div class="room-label" onclick={parent.roomClick}>
+                            <p class="name">{name}</p>
+                            <p class="count">({djs.length + audience.length} Listeners)</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </div>
         <div class="create-room">
             <p class="name-label">Choose a name for your room:</p>
@@ -42,11 +44,8 @@
             // Trigger init event when component is mounted to page.
             // Any store could respond to this.
             RiotControl.trigger('lobby.init')
+            self.roomSearch = ''
             self.showCreate = false
-        })
-
-        RiotControl.on('update_lobby', function(rooms) {
-
         })
 
         nameChange(e) {
@@ -63,6 +62,24 @@
 
         closeCreate(e) {
             self.showCreate = false
+        }
+
+        searchChange(e) {
+            self.roomSearch = e.target.value
+            var s = self.roomSearch.trim().toLowerCase()
+
+            for(var i=0, l=self.rooms.length; i<l; i++) {
+                if(s.length) {
+                    if(self.rooms[i].nameLower.indexOf(s) < 0) {
+                        //hide room
+                        self.rooms[i].hide = true
+                    } else {
+                        self.rooms[i].hide = false
+                    }
+                } else {
+                    self.rooms[i].hide = false
+                }
+            }
         }
 
         createRoom(e) {
@@ -95,6 +112,7 @@
 
         //room clicked, enter room
         roomClick(e) {
+            self.roomSearch = ''
             RiotControl.trigger('lobby.enter_room', e.item)
         }
 
