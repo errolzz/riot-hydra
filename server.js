@@ -19,7 +19,6 @@ io.on('connection', function (sock) {
     socket = sock;
 
     socket.on('chat_message', function(data) {
-        console.log(data.message);
         socket.emit('new_chat_message', data)
     });
 });
@@ -436,8 +435,7 @@ db.once('open', function() {
     var u1 = new User({
         googleId: '1232423434',
         name: 'TIM the !',
-        nameLower: 'tim the !',
-        playlists: ['55d0b383eedcd203b58c10b4']
+        nameLower: 'tim the !'
     });
     u1.save(function(err) {console.log('created')});
 
@@ -456,12 +454,10 @@ db.once('open', function() {
         name: 'Torture',
         nameLower: 'torture',
         privateRoom: false,
-        currentDj: {spot: 0, _id: '1232423434'},
-        currentTrack: {title: 'Mos Fake', _id: 'zTBIvIDnnv8', date: new Date().toString()},
         audience: [
-            
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ],
-        djs: [{googleId: '1232423434', name: 'TIM the !', nameLower: 'tim the !'}],
+        djs: [],
         currentDj: undefined
     });
     var r3 = new Room({

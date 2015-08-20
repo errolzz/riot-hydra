@@ -196,6 +196,7 @@ room {
             li {
                 margin-bottom: 22px;
                 position: relative;
+
                 .num {
                     display: inline-block;
                     width: 16px;
@@ -240,6 +241,13 @@ room {
                 &.dragging {
                     background: $pink;
                     z-index: 100;
+                }
+            }
+            &.playing {
+                li {
+                    &:first-child {
+                        pointer-events: none;
+                    }
                 }
             }
         }

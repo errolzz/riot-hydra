@@ -39,7 +39,7 @@
                         </div>
                     </div>
                     <div class="track-holder">
-                        <ul class="tracks">
+                        <ul class="tracks {userIsPlayling?'playing':''}">
                             <li class="playlist-track" each={currentList.tracks} onmousedown={startTrackDrag}>
                                 <span class="delete" title="Delete" onclick={removeFromPlaylist}>x</span>
                                 <span class="num">{index}.</span> 
@@ -514,14 +514,12 @@
         playTrackBy(dj) {
             //reset uesr playing
             self.userIsPlayling = false
-
-            //reset player progress
-            //clearInterval(self.progressTimer)
             
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
                 self.userIsPlayling = true
                 //set the next current track to play in the room
+                //send the first item of their current playlist to the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
                 }, {track: self.currentList.tracks[0], date: new Date().toString()})
@@ -628,6 +626,7 @@
             self.searchResults = []
         }
 
+        //adds a track to the end of users current playlist
         addToPlaylist(e) {
             var trackData = {
                 track: {
@@ -645,6 +644,7 @@
             }, trackData)
         }
 
+        //remove a clicked track from a playlist
         removeFromPlaylist(e) {
             U.ajax('POST', '/api/removetrack', function(updatedPlylist) {
                 self.setCurrentPlaylist(updatedPlylist)
@@ -655,7 +655,11 @@
             })
         }
 
+        //on mouse down on track
         startTrackDrag(e) {
+            //prevent user from dragging current playing track
+            if(self.userIsPlayling && e.item.index == 0) return
+            
             var t = e.currentTarget
             var startY = e.clientY
             var oldClass = t.className
@@ -672,6 +676,9 @@
             //on release
             document.body.onmouseup = function(e) {
 
+                t.className = oldClass
+                t.style.top = '0px';
+
                 //find parent playlist-track
                 if(U.hasClass(e.target.parentElement, 'playlist-track')) {
                     //get playlist-track index
@@ -680,10 +687,15 @@
                     newSpot = U.getElementIndex(e.target)
                 } else {
                     //do nothing
+                    self.stopDrag()
+                    t.style.pointerEvents = 'auto'
+                    return
                 }
+
+                //if user tries to move track into currently playing track
+                //set new spot to 1 instead of 0
+                if(self.userIsPlayling && newSpot == 0) newSpot = 1
                 
-                t.className = oldClass
-                t.style.top = '0px';
 
                 //reorder track array with track in newSpot position
                 U.moveListItem(self.currentList.tracks, oldSpot, newSpot)
@@ -701,6 +713,7 @@
             }
         }
 
+        //when mouse is released after dragging
         stopDrag() {
             //remove handlers
             document.body.onmouseup = undefined
@@ -708,6 +721,7 @@
             document.getElementById('playlists').mouseleave = undefined
         }
 
+        //clicking arrow up on playlist track item
         moveTrackToTop(e) {
             self.stopDrag()
 

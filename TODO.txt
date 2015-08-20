@@ -16,4 +16,4 @@ set up video players in search results
 
 auto mute current track while playing search result video
 
-set current track of user to "playing" state, non-editable
+allow playlists to be deleted
