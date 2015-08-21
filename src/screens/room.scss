@@ -10,6 +10,13 @@ room {
             &.full {
                 opacity: 1;
             }
+
+            $like: 0.7s ease-in-out;
+            -webkit-transition: $like;
+            -moz-transition: $like;
+            -o-transition: $like;
+            transition: $like;
+            transform: rotate(0deg);
         }
 
         .avatar-name {
@@ -36,6 +43,17 @@ room {
         &:hover {
             .avatar-name {
                 display: block;
+            }
+        }
+
+        &.like {
+            img {
+                transform: rotate(20deg);
+            }
+            &.likeLeft {
+                img {
+                    transform: rotate(-20deg);
+                }
             }
         }
     }

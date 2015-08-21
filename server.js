@@ -122,6 +122,8 @@ function createServer() {
             room.currentTrack = req.body.track;
             //set the time the track was set as current
             room.currentTrack.date = req.body.date;
+            //update the dj of the new track
+            room.currentDj = req.body.dj;
             //save the room with new current track
             room.save(function(err) {
                 if(!err) {
@@ -143,6 +145,7 @@ function createServer() {
             }
 
             //update room djs
+            //doesnt get here when user enters a room
             if(req.body.djs) {
                 //set new djs
                 room.djs = req.body.djs;
@@ -154,12 +157,12 @@ function createServer() {
                     room.currentTrack = undefined;
                 } else if(room.djs.length === 1) {
                     //if there is only 1 dj, make them current
-                    room.currentDj = {spot: 0, _id: room.djs[0]._id};
+                    room.currentDj = {spot: 0, googleId: room.djs[0].googleId};
                 } else {
                     //when a dj quits, keep current dj value the same
                     if(room.currentDj.spot > room.djs.length - 1) {
                         //unless the last dj quit, then go back to first
-                        room.currentDj = {spot: 0, _id: room.djs[0]._id};
+                        room.currentDj = {spot: 0, googleId: room.djs[0].googleId};
                     }
                 }
             }
@@ -415,7 +418,7 @@ var roomSchema = mongoose.Schema({
     privateRoom:    {type: Boolean, required: true},
     audience:       {type: Array}, //holds User models
     djs:            {type: Array}, //holds User models
-    currentDj:      {type: Object}, //{spot: array-index, _id: user-id}
+    currentDj:      {type: Object}, //{spot: array-index, googleId: googleId}
     currentTrack:   {type: Object} //youtube video id, title, and start date
 });
 
@@ -444,11 +447,14 @@ db.once('open', function() {
         name: 'Mindrot',
         nameLower: 'mindrot',
         privateRoom: false,
+        currentTrack: {_id: 'l1Pt3TojQ6g', title: 'wormsledge', date: new Date().toString()},
+        currentDj: {spot: 0, googleId: '90923324'},
         audience: [
-            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+            
         ],
-        djs: [],
-        currentDj: undefined
+        djs: [
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+        ]
     });
     var r2 = new Room({
         name: 'Torture',

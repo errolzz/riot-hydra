@@ -80,7 +80,7 @@
                     </div>
                 </div>
                 <div class="djs">
-                    <div each={room.djs} class="avatar {isPlaying?'playing':''}">
+                    <div each={room.djs} class="avatar {isPlaying?'playing':''} {like?'like':''} {likeLeft?'likeLeft':''}">
                         <img src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
                         <p class="avatar-name">{name}</p>
                     </div>
@@ -92,7 +92,7 @@
                 <div class="overlay">
                     <p class="title">{room.currentTrack.title}</p>
                     <button class="skip" show={userIsPlayling} onclick={prepNextTrack}>Skip song</button>
-                    <button class="like">* Apprecieate track *</button>
+                    <button class="like" onclick={likeTrack}>* Apprecieate track *</button>
                     <div class="progress-bar">
                         <div class="bg"></div>
                         <div id="progress-bar" class="bar"></div>
@@ -100,7 +100,7 @@
                 </div>
             </div>
             <div class="audience">
-                <div each={room.audience} class="avatar">
+                <div each={room.audience} class="avatar {like?'like':''} {likeLeft?'likeLeft':''}">
                     <img class={full: img} src="{img || 'assets/img/avatar.png'}" width="42" height="42" alt="" />
                     <p class="avatar-name">{name}</p>
                 </div>
@@ -133,6 +133,20 @@
                 self.leaveRoom()
             }
 
+            self.likeTimer = setInterval(function() {
+                for(var i=0, l=self.room.audience.length; i<l; i++) {
+                    if(self.room.audience[i].like) {
+                        self.room.audience[i].likeLeft = !self.room.audience[i].likeLeft
+                    }
+                }
+                for(var j=0, l=self.room.djs.length; j<l; j++) {
+                    if(self.room.djs[j].like) {
+                        self.room.djs[j].likeLeft = !self.room.djs[j].likeLeft
+                    }
+                }
+                self.update()
+            }, 666)
+
             //socket will also emit room_users_changed at this point
         })
 
@@ -163,16 +177,20 @@
                     var startTime = 0
                     startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
                     self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
-                    console.log('jumping to ' + startTime)
                 }
 
                 //video is playing
                 if(self.room.djs.length == 0) {
                     self.stopVideo()
                 }
+
+                self.clearProgress()
+
                 //start progress bar
-                var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
-                document.getElementById('progress-bar').style.width = percent + '%'
+                self.progressTimer = setInterval(function() {
+                    var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
+                    document.getElementById('progress-bar').style.width = percent + '%'
+                }, 50)
             } else if(e.data == 0) {
                 self.prepNextTrack()
             }
@@ -183,9 +201,16 @@
 
         stopVideo() {
             if(self.player) {
-                self.player.stopVideo();
-                self.player.clearVideo();
+                self.player.stopVideo()
+                self.player.clearVideo()
+                self.clearProgress()
             }
+        }
+
+        clearProgress() {
+            try{
+                clearInterval(self.progressTimer)
+            } catch(e) {}
         }
 
         prepNextTrack() {
@@ -202,15 +227,51 @@
                     //get the next dj spot
                     var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
                     self.setCurrentPlaylist(playlist)
-                    self.playTrackBy(self.room.djs[nextDj])
+                    self.playTrackBy(self.room.djs[nextDj], nextDj)
                     self.update()
                 }, self.currentList)
             } else {
                 //if user is not dj
                 var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
-                self.playTrackBy(self.room.djs[nextDj])
+                self.playTrackBy(self.room.djs[nextDj], nextDj)
                 self.update()
             }
+        }
+
+        //user likes the track!
+        likeTrack(e) {
+            var roomUser;
+            //get the users object in the room
+            if(self.userIsDj) {
+                roomUser = U.getOne('googleId', self.user.googleId, self.room.djs)
+            } else {
+                roomUser = U.getOne('googleId', self.user.googleId, self.room.audience)
+            }
+            //set users like
+            roomUser.like = true
+            roomUser.likeLeft = true
+
+            //update room users
+            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                //updated room is sent via socket as room_users_changed
+            }, {audience: self.room.audience, djs: self.room.djs})
+        }
+
+        clearLikes() {
+            clearInterval(self.likeTimer)
+            //loop through all users in room and set their like to false
+            for(var i=0, l=self.room.audience.length; i<l; i++) {
+                self.room.audience[i].like = false
+                delete self.room.audience[i].like
+            }
+            for(var j=0, l=self.room.djs.length; j<l; j++) {
+                self.room.djs[j].like = false
+                delete self.room.djs[j].likeLeft
+            }
+            //update room users
+            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                //updated room is sent via socket as room_users_changed
+            }, {audience: self.room.audience, djs: self.room.djs})
         }
 
         //listen for chat typing
@@ -280,6 +341,8 @@
 
         //listen for track changes
         socket.on('room_track_changed', function(updatedRoom) {
+            self.clearProgress()
+            self.clearLikes()
             self.setupPlayer(updatedRoom)
         })
 
@@ -298,6 +361,7 @@
                 }
 
                 self.update()
+                console.log(self.room)
             }
         }
 
@@ -366,7 +430,7 @@
             if(room.currentDj && self.room) {
                 //the last dj quit while playing
                 if(self.room.currentDj) {
-                    if(room.currentDj._id != self.room.currentDj._id) {
+                    if(room.currentDj.googleId != self.room.currentDj.googleId) {
                         //start new dj after update
                         startNewDj = true
                     }
@@ -396,12 +460,14 @@
                 //loop through djs to set which is playing
                 //this is only to update the dj avatar isPlaying vertical position
                 for(var i=0, l=room.djs.length; i<l; i++) {
-                    room.djs[room.currentDj.spot].isPlaying = true
+                    room.djs[i].isPlaying = false
                 }
+                console.log('switch ' + room.currentDj.spot)
+                room.djs[room.currentDj.spot].isPlaying = true
 
                 //strat the video if needed
                 if(startNewDj) {
-                    self.playTrackBy(room.djs[room.currentDj.spot])
+                    self.playTrackBy(room.djs[room.currentDj.spot], room.currentDj.spot)
                 }
             } else {
                 //no djs
@@ -428,7 +494,7 @@
                 //if the user is the only dj
                 if(updatedRoom.djs.length == 1) {
                     //start playing the first song in their current playlist
-                    self.playTrackBy(self.user);
+                    self.playTrackBy(self.user, 0);
                 }
             }, {audience: self.room.audience, djs: self.room.djs})
         }
@@ -439,7 +505,12 @@
 
         //quit as dj
         quitDj(stayInRoom) {
-            self.userIsPlayling = false
+            //if user was dj, stop video
+            if(self.userIsPlayling) {
+                self.userIsPlayling = false
+                self.stopVideo()
+            }
+
             //remove user from local djs
             U.removeOne('_id', self.user._id, self.room.djs)
             //add user to local audience
@@ -522,10 +593,10 @@
 
         //called from first dj stepping up
         //also from when current djs song ends
-        playTrackBy(dj) {
+        playTrackBy(dj, spot) {
             //reset uesr playing
             self.userIsPlayling = false
-            
+
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
                 self.userIsPlayling = true
@@ -533,7 +604,11 @@
                 //send the first item of their current playlist to the room
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
-                }, {track: self.currentList.tracks[0], date: new Date().toString()})
+                }, {
+                    track: self.currentList.tracks[0], 
+                    date: new Date().toString(),
+                    dj: {spot: spot, _id: dj.googleId}
+                })
             }
         }
 
