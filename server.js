@@ -135,7 +135,8 @@ function createServer() {
             })
         });
     });
-
+    //hi
+    //hi 2
     //update a rooms users
     app.put('/api/roomusers/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
@@ -150,19 +151,21 @@ function createServer() {
                 //set new djs
                 room.djs = req.body.djs;
                 
-                if(room.djs.length === 0) {
-                    //if no djs are playing
-                    room.currentDj = undefined;
-                    //also clear the current track
-                    room.currentTrack = undefined;
-                } else if(room.djs.length === 1) {
-                    //if there is only 1 dj, make them current
-                    room.currentDj = {spot: 0, googleId: room.djs[0].googleId};
-                } else {
-                    //when a dj quits, keep current dj value the same
-                    if(room.currentDj.spot > room.djs.length - 1) {
-                        //unless the last dj quit, then go back to first
+                if(req.body.changeDj) {
+                    if(room.djs.length === 0) {
+                        //if no djs are playing
+                        room.currentDj = undefined;
+                        //also clear the current track
+                        room.currentTrack = undefined;
+                    } else if(room.djs.length === 1) {
+                        //if there is only 1 dj, make them current
                         room.currentDj = {spot: 0, googleId: room.djs[0].googleId};
+                    } else {
+                        //when a dj quits, keep current dj value the same
+                        if(room.currentDj.spot > room.djs.length - 1) {
+                            //unless the last dj quit, then go back to first
+                            room.currentDj = {spot: 0, googleId: room.djs[0].googleId};
+                        }
                     }
                 }
             }

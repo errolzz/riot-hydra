@@ -9,7 +9,12 @@
                 <p class="results-header"><span class="query">{query}</span> search results</p>
                 <ul class="results-holder">
                     <li class="result" each={searchResults}>
-                        <img src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
+                        <iframe id="yt-preview" if={preview} class="preview-player" type="text/html" 
+                            width="100%" height="auto" 
+                            frameborder="0"
+                            src="http://www.youtube.com/embed/{id.videoId}?autoplay=1">
+                        </iframe>
+                        <img hide={preview} onclick={previewTrack} src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
                         <p class="title">{snippet.title}</p>
                         <p hide={added} class="add" onclick={addToPlaylist}>+ Add to playlist</p>
                         <p show={added} class="added">In playlist!</p>
@@ -342,6 +347,7 @@
         //listen for track changes
         socket.on('room_track_changed', function(updatedRoom) {
             self.clearProgress()
+            console.log('room_track_changed')
             self.clearLikes()
             self.setupPlayer(updatedRoom)
         })
@@ -361,7 +367,7 @@
                 }
 
                 self.update()
-                console.log(self.room)
+                //console.log(self.room)
             }
         }
 
@@ -392,7 +398,6 @@
         }
 
         createPlayer() {
-            console.log('player created')
             //init the youtube player
             self.player = new YT.Player('yt-player', {
                 videoId: self.room.currentTrack._id,
@@ -462,7 +467,7 @@
                 for(var i=0, l=room.djs.length; i<l; i++) {
                     room.djs[i].isPlaying = false
                 }
-                console.log('switch ' + room.currentDj.spot)
+                //set current dj flag on dj
                 room.djs[room.currentDj.spot].isPlaying = true
 
                 //strat the video if needed
@@ -496,7 +501,7 @@
                     //start playing the first song in their current playlist
                     self.playTrackBy(self.user, 0);
                 }
-            }, {audience: self.room.audience, djs: self.room.djs})
+            }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})
         }
 
         quitDjClicked(e) {
@@ -525,7 +530,7 @@
             if(stayInRoom) {
                 U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
                     //updated room is sent via socket as room_users_changed
-                }, {audience: self.room.audience, djs: self.room.djs})
+                }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})
             }
         }
 
@@ -588,7 +593,7 @@
                 //updated room is sent via socket as room_users_changed
                 //if leaving room from leave room link, switch to lobby
                 if(forceLobby) RiotControl.trigger('room.left_room')
-            }, {audience: self.room.audience, djs: self.room.djs})
+            }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})
         }
 
         //called from first dj stepping up
@@ -703,6 +708,50 @@
                     self.update()
                 })
             }, 666)
+        }
+
+        previewTrack(e) {
+            //loop through current results
+            for(var i=0, l=self.searchResults.length; i<l; i++) {
+                //check if result was clicked
+                if(e.item.id.videoId == self.searchResults[i].id.videoId) {
+                    //if yes, set preview to true
+                    self.searchResults[i].preview = true
+                } else {
+                    //otherwise false
+                    self.searchResults[i].preview = false
+                }
+            }
+            self.update()
+
+            //init the preview youtube player
+            self.previewPlayer = new YT.Player('yt-preview', {
+                playerVars: {
+                    autoplay: 1,
+                    disablekb: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0
+                },
+                events: {
+                    'onStateChange': self.onPrevieStateChange
+                }
+            })
+        }
+
+        onPrevieStateChange(e) {
+            //if the room player exists
+            if(self.player) {
+                if(e.data == 1) {
+                    //if preview playing, mute room player
+                    self.player.mute()
+                } else if(e.data == 0 || e.data == 2) {
+                    //if preview paused or ended, unmute room player
+                    self.player.unMute()
+                } else {
+
+                }
+            }
         }
 
         closeSearch(e) {
