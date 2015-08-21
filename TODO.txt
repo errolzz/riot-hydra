@@ -8,9 +8,17 @@ TODO:
 
 mute current track
 
-set up video players in search results
-
-auto mute current track while playing search result video
-
 allow playlists to be deleted
 
+
+
+
+A track can play when...
+
+1. there are no djs in the room, and a user steps up
+2. a djs song ends and the next dj starts playing
+3. a dj skips their current song and the next dj starts playing
+4. a dj quits while playing a song and the next dj starts playing
+5. a user enters a room and a dj is already playing
+
+Each of these assumes there is a next dj, and that the next dj has a song in their playlist

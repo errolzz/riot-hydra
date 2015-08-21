@@ -12,7 +12,7 @@
                         <iframe id="yt-preview" if={preview} class="preview-player" type="text/html" 
                             width="100%" height="auto" 
                             frameborder="0"
-                            src="http://www.youtube.com/embed/{id.videoId}?autoplay=1">
+                            src="http://www.youtube.com/embed/{id.videoId}?autoplay=1&enablejsapi=1">
                         </iframe>
                         <img hide={preview} onclick={previewTrack} src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
                         <p class="title">{snippet.title}</p>
@@ -724,22 +724,25 @@
             }
             self.update()
 
-            //init the preview youtube player
-            self.previewPlayer = new YT.Player('yt-preview', {
-                playerVars: {
-                    autoplay: 1,
-                    disablekb: 1,
-                    modestbranding: 1,
-                    rel: 0,
-                    showinfo: 0
-                },
-                events: {
-                    'onStateChange': self.onPrevieStateChange
-                }
-            })
+            setTimeout(function() {
+                //init the preview youtube player
+                self.previewPlayer = new YT.Player('yt-preview', {
+                    playerVars: {
+                        autoplay: 1,
+                        disablekb: 1,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0
+                    },
+                    events: {
+                        'onStateChange': self.onPreviewStateChange
+                    }
+                })
+            }, 100)
         }
 
-        onPrevieStateChange(e) {
+        onPreviewStateChange(e) {
+            console.log(e.data)
             //if the room player exists
             if(self.player) {
                 if(e.data == 1) {
@@ -759,6 +762,8 @@
             self.searching = false
             window.clearTimeout(searchTimer)
             self.searchResults = []
+            //unmute room player
+            if(self.player) self.player.unMute()
         }
 
         //adds a track to the end of users current playlist
@@ -862,7 +867,14 @@
 
             //remove topped item
             var track = self.currentList.tracks.splice(e.item.index - 1, 1)[0]
-            self.currentList.tracks.unshift(track)
+            //if user is playing track
+            if(self.userIsPlayling) {
+                //add to 2nd spot
+                self.currentList.tracks.splice(1, 0, track)
+            } else {
+                //if not playing, add item to top
+                self.currentList.tracks.unshift(track)
+            }
 
             //set new playlist order
             self.setCurrentPlaylist(self.currentList)
