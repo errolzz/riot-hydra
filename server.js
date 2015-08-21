@@ -445,8 +445,32 @@ db.once('open', function() {
     });
     u1.save(function(err) {console.log('created')});
 
-
     var r1 = new Room({
+        name: 'Torture',
+        nameLower: 'torture',
+        privateRoom: false,
+        audience: [
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+        ],
+        djs: [],
+        currentDj: undefined
+    });
+    var r2 = new Room({
+        name: 'FATSS',
+        nameLower: 'fatss',
+        privateRoom: false,
+        audience: [
+            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
+        ],
+        djs: [],
+        currentDj: undefined
+    });
+    r1.save(function(err) {console.log('created')});
+    r2.save(function(err) {console.log('created')});
+
+    //this room has a fake dj playing a track
+    //you must drop the rooms table, then re-run server to get the start date valid
+    /*var r3 = new Room({
         name: 'Mindrot',
         nameLower: 'mindrot',
         privateRoom: false,
@@ -459,29 +483,8 @@ db.once('open', function() {
             {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
         ]
     });
-    var r2 = new Room({
-        name: 'Torture',
-        nameLower: 'torture',
-        privateRoom: false,
-        audience: [
-            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
-        ],
-        djs: [],
-        currentDj: undefined
-    });
-    var r3 = new Room({
-        name: 'FATSS',
-        nameLower: 'fatss',
-        privateRoom: false,
-        audience: [
-            {googleId: '90923324', name: 'guryGURY', nameLower: 'gurygury'}
-        ],
-        djs: [],
-        currentDj: undefined
-    });
-    r1.save(function(err) {console.log('created')});
-    r2.save(function(err) {console.log('created')});
     r3.save(function(err) {console.log('created')});
+    */
 });
 
 
