@@ -160,26 +160,31 @@
                 self.leaveRoom()
             }
 
-            self.likeTimer = setInterval(function() {
-                for(var i=0, l=self.room.audience.length; i<l; i++) {
-                    if(self.room.audience[i].like) {
-                        self.room.audience[i].likeLeft = !self.room.audience[i].likeLeft
-                    }
-                }
-                for(var j=0, l=self.room.djs.length; j<l; j++) {
-                    if(self.room.djs[j].like) {
-                        self.room.djs[j].likeLeft = !self.room.djs[j].likeLeft
-                    }
-                }
-                self.update()
-            }, 666)
-
             //socket will also emit room_users_changed at this point
         })
 
         RiotControl.on('force_leave_room', function() {
             self.leaveRoom()
         })
+
+        //sets up the like dance timer
+        setupLikeTimer() {
+            self.likeTimer = setInterval(function() {
+                
+                for(var i=0, l=self.room.audience.length; i<l; i++) {
+                    if(self.room.audience[i].like) {
+                        self.room.audience[i].likeLeft = !self.room.audience[i].likeLeft
+                    }
+                }
+                
+                for(var j=0, l=self.room.djs.length; j<l; j++) {
+                    if(self.room.djs[j]) {
+                        self.room.djs[j].likeLeft = !self.room.djs[j].likeLeft
+                    }
+                }
+                self.update()
+            }, 666)
+        }
 
         //gets the users playlist data
         getUserPlaylists(callback) {
@@ -292,8 +297,11 @@
             }, {audience: self.room.audience, djs: self.room.djs})
         }
 
+        //clearLikes from in room
         clearLikes() {
+            //stop timer
             clearInterval(self.likeTimer)
+
             //loop through all users in room and set their like to false
             for(var i=0, l=self.room.audience.length; i<l; i++) {
                 self.room.audience[i].like = false
@@ -379,6 +387,7 @@
             self.clearProgress()
             console.log('room_track_changed')
             self.clearLikes()
+            self.setupLikeTimer()
             self.setupPlayer(updatedRoom)
         })
 
@@ -461,6 +470,7 @@
 
         //refresh room with new data
         updateRoom(room) {
+            console.log('updateRoom!')
             //if the next dj should start playing
             var startNewDj = false
             if(room.currentDj && self.room) {
@@ -623,7 +633,8 @@
         //go back to the lobby
         leaveRoom(forceLobby) {
             window.onbeforeunload = undefined
-
+            clearInterval(self.likeTimer)
+            
             //if user was dj, quit dj
             if(self.userIsDj) self.quitDj()
 
