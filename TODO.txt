@@ -1,16 +1,23 @@
 
 
-TODO:
+BUGS:
 ------------------------------------------------------------------------
 
-
-
-upload to server
-test socket.io stuff
-
+when leaving a room, a dj may not appear to leave for other users
+last video played in a player persists into new rooms (maybe only rooms with no current video?)
 
 
 
+
+
+
+
+
+
+
+
+NOTES:
+------------------------------------------------------------------------
 
 A track can play when...
 
