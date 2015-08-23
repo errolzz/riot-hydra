@@ -219,9 +219,34 @@ room {
                 display: none;
 
                 li {
-                    @include action-text();
+                    .spacer {
+                        display: inline-block;
+                        width: 16px;
+                    }
+                    .delete {
+                        display: none;
+                        @include action-text();
+                        text-transform: uppercase;
+                        width: 16px;
+                        font-weight: 700;
+                    }
+                    .title {
+                        @include action-text();
+                        padding-right: 20px;
+                        max-width: calc(100% - 30px);
+                        display: inline-block;
+                        vertical-align: top;
+                    }
                     &:first-child {
                         color: $gray-light;
+                    }
+                    &:hover {
+                        .spacer {
+                            display: none;
+                        }
+                        .delete {
+                            display: inline-block;
+                        }
                     }
                 }
             }
@@ -323,6 +348,23 @@ room {
 
             &.posting {
                 pointer-events: none;
+            }
+        }
+
+        .delete-playlist {
+            .warning {
+                margin-bottom: 13px;
+                span {
+                    color: $highlight;
+                }
+            }
+            .cancel-btn {
+                @include action-text();
+                float: left;
+                margin-top: 12px;
+            }
+            .delete-btn {
+                float: right;
             }
         }
 

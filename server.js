@@ -289,7 +289,6 @@ function createServer() {
                             //get new playlists
                             getUserPlaylists(user.playlists.join(','), function(playlists) {
 
-                                //console.log(playlists);
                                 var response = {
                                     user: user,
                                     playlist: playlist,
@@ -305,6 +304,32 @@ function createServer() {
             } else {
               return console.log(err);
             }
+        });
+    });
+    
+    //delete a users playlist
+    app.post('/api/removeplaylist', function (req, res) {
+        //first delete it from the playlist table
+        Playlist.findOne({_id: req.body.playlist._id}, function(err, list) {
+            list.remove(function (err) {
+                if (!err) {
+                    console.log('deleted playlist');
+                    //next remove the list id from the users playlist array
+                    User.findOne({googleId: req.body.user.googleId}, function(err, user) {
+                        for(var i=0, l=user.playlists.length; i<l; i++) {
+                            if(user.playlists[i] == req.body.playlist._id) {
+                                user.playlists.splice(i, 1);
+                                break;
+                            }
+                        }
+                        user.save(function(err) {
+                            return res.send(user);
+                        })
+                    });
+                } else {
+                    console.log(err);
+                }
+            });
         });
     });
 

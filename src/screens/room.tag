@@ -27,7 +27,7 @@
 
             <!-- playlists -->
             <div id="playlists" class="container {selectingList?'list-open':''}">
-                <div show={currentList && !creatingPlaylist} class="playlists">
+                <div show={currentList && !creatingPlaylist} hide={playlistToDelete} class="playlists">
                     <div class="dropdown">
                         <div class="arrow-holder">
                             <div class="arrow-down"></div>
@@ -39,7 +39,11 @@
                         <div class="options">
                             <ul>
                                 <li onclick={closePlaylists}>Select a playlist</li>
-                                <li each={playlists} onclick={selectPlaylist}>{name}</li>
+                                <li each={playlists}>
+                                    <span class="delete" title="Delete" onclick={toggleDeletePlaylist}>x</span>
+                                    <span class="spacer">&nbsp;</span> 
+                                    <span class="title" onclick={selectPlaylist}>{name}</span>
+                                </li>
                             </ul>
                             <div class="new-playlist">
                                 <button onclick={togglePlaylistForm}>+ Create new playlist</button>
@@ -64,6 +68,12 @@
 
                     <p class="cancel-btn" onclick={togglePlaylistForm}>Cancel</p>
                     <button class="create-btn" type="button" onclick={createPlaylist}>Create</button>
+                </div>
+
+                <div show={playlistToDelete} class="delete-playlist">
+                    <p class="warning">Really delete <span>{playlistToDelete.name}</span>?</p>
+                    <p class="cancel-btn" onclick={toggleDeletePlaylist}>Cancel</p>
+                    <button class="delete-btn" type="button" onclick={deletePlaylist}>Delete</button>
                 </div>
 
                 <p class="user"><span class="name">{user.name}</span> - <span class="leave" onclick={leaveRoomClicked}>Leave room</span></p>
@@ -123,6 +133,7 @@
     <script>
         var self = this
         self.creatingPlaylist = false
+        self.playlistToDelete = undefined
         self.chatLog = []
 
         RiotControl.on('render_room', function(user, room) {
@@ -133,6 +144,9 @@
 
             //get users playlists
             self.getUserPlaylists(function() {
+                //set current playlist to the first one
+                self.setCurrentPlaylist(self.playlists[0])
+
                 //update room after lists are loaded
                 self.updateRoom(room)
 
@@ -140,6 +154,8 @@
                 self.setupPlayer(room)
             })
 
+            //leave room if the user closes the window
+            //also happens on refresh
             window.onbeforeunload = function() {
                 self.leaveRoom()
             }
@@ -171,7 +187,6 @@
             listUrl += self.user.playlists.join(',')
 
             U.ajax('GET', listUrl, function(lists) {
-                self.setCurrentPlaylist(lists[0])
                 self.playlists = lists
                 if(callback) callback()
             })
@@ -574,6 +589,23 @@
             self.selectingList = false
         }
 
+        //show/hide the delete playlist confirmation
+        toggleDeletePlaylist(e) {
+            self.playlistToDelete = e.item
+        }
+
+        //delete the playlist
+        deletePlaylist(e) {
+            U.ajax('POST', '/api/removeplaylist', function(user) {
+                self.playlistToDelete = undefined
+                self.user = user
+                self.getUserPlaylists(self.update)
+            }, {
+                user: self.user,
+                playlist: self.playlistToDelete
+            })
+        }
+
         //toggle create playlist form
         togglePlaylistForm(e) {
             self.creatingPlaylist = !self.creatingPlaylist
@@ -643,6 +675,7 @@
                 self.playlists = data.playlists
                 self.creatingPlaylist = false
                 self.postingPlaylist = false
+                self.newPlaylistName = ''
                 self.update()
             }, {
                 creatorId: self.user.googleId,

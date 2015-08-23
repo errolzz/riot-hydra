@@ -5,10 +5,9 @@ TODO:
 
 
 
+upload to server
+test socket.io stuff
 
-mute current track
-
-allow playlists to be deleted
 
 
 
