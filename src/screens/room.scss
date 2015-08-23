@@ -125,6 +125,28 @@ room {
                     display: block;
                     margin-bottom: 13px;
                 }
+
+                .preview {
+                    position: relative;
+                    cursor: pointer;
+                    .preview-arrow {
+                        position: absolute;
+                        top: 9px;
+                        left: 10px;
+                        width: 0; 
+                        height: 0; 
+                        border-top: 12px solid transparent;
+                        border-bottom: 12px solid transparent;
+                        border-left: 12px solid $pink;
+                        display: none;
+                    }
+                    &:hover {
+                        .preview-arrow {
+                            display: block;
+                        }
+                    }
+                }
+                
                 .title {
                     color: $white;
                     margin-bottom: 10px;
@@ -367,14 +389,12 @@ room {
             position: relative;
 
             .video {
-                pointer-events: none;
                 width: 100%;
                 height: 28.125vw; //50% * 0.5625
 
                 iframe {
                     width: 100%;
                     height: 100%;
-                    pointer-events: none;
                 }
             }
 
@@ -396,16 +416,18 @@ room {
             .overlay {
                 display: none;
                 position: absolute;
-                height: 94px;
+                height: 52px;
                 width: 100%;
                 bottom: 0px;
-                right: 0px;
+                left: 0px;
 
                 .title {
                     position: absolute;
-                    right: 0px;
-                    top: 0px;
-                    padding: 12px;
+                    left: 80px;
+                    top: 10px;
+                    padding: 12px 13px;
+                    overflow: hidden;
+                    width: calc(100% - 80px);
                     height: 42px;
                     background: $black;
                     color: $white;
@@ -414,16 +436,30 @@ room {
                 .like {
                     position: absolute;
                     right: 0px;
-                    top: 42px;
+                    top: 10px;
+                    width: 80px;
                 }
                 .skip {
                     position: absolute;
-                    bottom: 10px;
+                    background: $black;
+                    color: $pink;
+                    top: 10px;
+                    right: 80px;
+                    &:hover {
+                        background: $black;
+                        color: $white;
+                    }
+                }
+                .mute {
+                    position: absolute;
                     left: 0px;
+                    top: 10px;
+                    width: 80px;
+                    text-align: center;
                 }
                 .progress-bar {
                     position: absolute;
-                    bottom: 0px;
+                    top: 0px;
                     left: 0px;
                     width: 100%;
                     height: 10px;

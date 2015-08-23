@@ -14,7 +14,10 @@
                             frameborder="0"
                             src="http://www.youtube.com/embed/{id.videoId}?autoplay=1&enablejsapi=1">
                         </iframe>
-                        <img hide={preview} onclick={previewTrack} src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
+                        <div class="preview">
+                            <img hide={preview} onclick={previewTrack} src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
+                            <div class="preview-arrow"></div>
+                        </div>
                         <p class="title">{snippet.title}</p>
                         <p hide={added} class="add" onclick={addToPlaylist}>+ Add to playlist</p>
                         <p show={added} class="added">In playlist!</p>
@@ -94,10 +97,13 @@
                     </div>
                 </div>
                 <button class="quit-dj" show={userIsDj} onclick={quitDjClicked}>Quit DJ</button>
-                <div class="overlay">
+                <div class="overlay" show={room.currentTrack}>
                     <p class="title">{room.currentTrack.title}</p>
+                    <button class="mute" onclick={toggleMute}>
+                        <span hide={playerMuted}>Mute</span><span show={playerMuted}>Unmute</span>
+                    </button>
                     <button class="skip" show={userIsPlayling} onclick={prepNextTrack}>Skip song</button>
-                    <button class="like" onclick={likeTrack}>* Apprecieate track *</button>
+                    <button class="like" onclick={likeTrack}>Dance</button>
                     <div class="progress-bar">
                         <div class="bg"></div>
                         <div id="progress-bar" class="bar"></div>
@@ -202,6 +208,15 @@
 
             //save video state
             self.lastVideoState = e.data
+        }
+
+        toggleMute() {
+            if(self.player.isMuted()) {
+                self.player.unMute()
+            } else {
+                self.player.mute()
+            }
+            self.playerMuted = !self.playerMuted
         }
 
         stopVideo() {
@@ -413,6 +428,7 @@
                     'onStateChange': self.onPlayerStateChange
                 }
             })
+            self.playerMuted = false
         }
 
         //check if the current user is in the room provided
@@ -742,9 +758,8 @@
         }
 
         onPreviewStateChange(e) {
-            console.log(e.data)
             //if the room player exists
-            if(self.player) {
+            if(self.player && !self.playerMuted) {
                 if(e.data == 1) {
                     //if preview playing, mute room player
                     self.player.mute()
@@ -763,7 +778,7 @@
             window.clearTimeout(searchTimer)
             self.searchResults = []
             //unmute room player
-            if(self.player) self.player.unMute()
+            if(self.player && !self.playerMuted) self.player.unMute()
         }
 
         //adds a track to the end of users current playlist
