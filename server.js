@@ -9,17 +9,14 @@ var app = express();
 var server = app.listen((process.env.PORT || 8000), createServer);
 
 var io = socketIo(server);
-var socket;
 
 
 
 //on socket connect
-io.on('connection', function (sock) {
-    //save socket instance
-    socket = sock;
-
+io.on('connection', function (socket) {
+    //listen for chat messages
     socket.on('chat_message', function(data) {
-        socket.emit('new_chat_message', data)
+        io.emit('new_chat_message', data)
     });
 });
 
@@ -128,7 +125,7 @@ function createServer() {
             room.save(function(err) {
                 if(!err) {
                     res.send(room);
-                    socket.emit('room_track_changed', room);
+                    io.emit('room_track_changed', room);
                 } else {
                     console.log(err);
                 }
@@ -185,7 +182,7 @@ function createServer() {
                 room.save(function (err) {
                     if (!err) {
                         res.send(room);
-                        socket.emit('room_users_changed', room);
+                        io.emit('room_users_changed', room);
                     } else {
                         console.log(err);
                     }
@@ -434,7 +431,7 @@ var userSchema = mongoose.Schema({
 var playlistSchema = mongoose.Schema({
     creatorId:      {type: String, required: true},
     creatorName:    {type: String, required: true},
-    name:           {type: String, unique: true, required: true},
+    name:           {type: String, required: true},
     privateList:    {type: Boolean, required: true},
     tracks:         {type: Array} //holds {id: youtube_video_id, name: youtube_video_name}
 });
