@@ -6,7 +6,7 @@ var request = require('request');
 var socketIo = require('socket.io');
 
 var app = express();
-var server = app.listen(8000, createServer);
+var server = app.listen((process.env.PORT || 8000), createServer);
 
 var io = socketIo(server);
 var socket;

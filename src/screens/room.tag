@@ -94,7 +94,7 @@
             <div class="video-holder">
                 <div class="video">
                     <div id="yt-player">
-                        <img src="assets/img/gorillaz.jpg" width="100%" alt="" />
+                        <img src="assets/img/no-djs.png" width="100%" alt="" />
                     </div>
                 </div>
                 <div class="djs">
