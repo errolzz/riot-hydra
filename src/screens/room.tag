@@ -207,6 +207,7 @@
                     //get time passed in seconds from current track start date to now
                     var startTime = 0
                     startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
+                    console.log('seeking to ' + startTime + 0.666)
                     self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
                 }
 
@@ -661,11 +662,13 @@
             //reset uesr playing
             self.userIsPlayling = false
 
+            console.log(dj.googleId, self.user.googleId)
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
                 self.userIsPlayling = true
                 //set the next current track to play in the room
                 //send the first item of their current playlist to the room
+                console.log('setting start date ')
                 U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                     //socket emits room_track_changed
                 }, {
