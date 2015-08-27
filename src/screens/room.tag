@@ -476,7 +476,9 @@
             var startNewDj = false
             if(room.currentDj && self.room) {
                 //the last dj quit while playing
+                console.log(self.room.currentDj)
                 if(self.room.currentDj) {
+                    console.log('fail: ' +room.currentDj.googleId, self.room.currentDj.googleId)
                     if(room.currentDj.googleId != self.room.currentDj.googleId) {
                         //start new dj after update
                         startNewDj = true
@@ -514,6 +516,7 @@
 
                 //strat the video if needed
                 if(startNewDj) {
+                    console.log('starting new dj')
                     self.playTrackBy(room.djs[room.currentDj.spot], room.currentDj.spot)
                 }
             } else {
@@ -661,8 +664,9 @@
         playTrackBy(dj, spot) {
             //reset uesr playing
             self.userIsPlayling = false
+            //make sure local room has correct dj
+            self.room.currentDj = {spot: spot, googleId: dj.googleId}
 
-            console.log(dj.googleId, self.user.googleId)
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
                 self.userIsPlayling = true
@@ -674,7 +678,7 @@
                 }, {
                     track: self.currentList.tracks[0], 
                     date: new Date().toString(),
-                    dj: {spot: spot, _id: dj.googleId}
+                    dj: {spot: spot, googleId: dj.googleId}
                 })
             }
         }
