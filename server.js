@@ -417,7 +417,7 @@ var options = { server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000
                 replset: { socketOptions: { keepAlive: 1, connectTimeoutMS : 30000 } } };
 
 //set up database connection
-mongoose.connect('mongodb://localhost/hydra', options); //DEV
+mongoose.connect('mongodb://127.0.0.1/hydra', options); //DEV
 
 //define Users
 var userSchema = mongoose.Schema({
