@@ -753,7 +753,8 @@
         search() {
             //set up query
             var q = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video'
-            q += '&videoCategoryId=10&maxResults=20&key=AIzaSyBRzzVaMuLFIKLA2MAcbmEWVbx5JWXmxSE&q='
+            q += '&videoCategoryId=10&maxResults=20&videoEmbeddable=true&videoSyndicated=true'
+            q += '&key=AIzaSyBRzzVaMuLFIKLA2MAcbmEWVbx5JWXmxSE&q='
             q += encodeURIComponent(self.query)
 
             //set search on delay timer
