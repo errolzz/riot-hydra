@@ -132,11 +132,17 @@ function createServer() {
             })
         });
     });
-    //hi
-    //hi 2
+    
     //update a rooms users
     app.put('/api/roomusers/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
+
+            //not sure why this body can be undefined...
+            if(!req.body) {
+                console.log('/api/roomusers/:id req.body undefined')
+                return
+            }
+
             //update room audience
             if(req.body.audience) {
                 room.audience = req.body.audience;
