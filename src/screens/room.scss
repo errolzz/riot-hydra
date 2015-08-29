@@ -253,8 +253,12 @@ room {
         }
 
         .track-holder {
-            overflow-y: scroll;
+            overflow-y: hidden;
             height: calc(100% - 154px);
+
+            &:hover {
+                overflow-y: scroll;
+            }
         }
 
         .tracks {
@@ -395,7 +399,7 @@ room {
         }
 
         .convo {
-            overflow-y: scroll;
+            overflow-y: hidden;
             height: calc(100% - 101px); //19 + 40 + 42;
 
             .message {
@@ -403,6 +407,10 @@ room {
                 .user {
                     color: $highlight;
                 }
+            }
+
+            &:hover {
+                overflow-y: scroll;
             }
         }
 

@@ -208,7 +208,8 @@
                     var startTime = 0
                     startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
                     console.log('seeking to ' + startTime + 0.666)
-                    self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
+                    //only seek if not playing track
+                    if(!userIsPlayling) self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
                 }
 
                 //video is playing
@@ -224,7 +225,8 @@
                     document.getElementById('progress-bar').style.width = percent + '%'
                 }, 50)
             } else if(e.data == 0) {
-                self.prepNextTrack()
+                //if the user was playing, prep next track to play
+                if(self.userIsPlayling) self.prepNextTrack()
             }
 
             //save video state
@@ -254,29 +256,30 @@
             } catch(e) {}
         }
 
+        //can/should only be called by the current playing user, when their song ends
         prepNextTrack() {
-            //check if user was dj
-            if(self.userIsPlayling) {
-                //when video ends move it to the end of current djs current playlist
-                //take first track from playlist out
-                var justPlayed = self.currentList.tracks.shift()
-                //and add it to the back
-                self.currentList.tracks.push(justPlayed)
-                
-                //post new current list order
-                U.ajax('POST', '/api/playlistorder', function(playlist) {
-                    //get the next dj spot
-                    var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
-                    self.setCurrentPlaylist(playlist)
-                    self.playTrackBy(self.room.djs[nextDj], nextDj)
-                    self.update()
-                }, self.currentList)
-            } else {
+            //when video ends move it to the end of current djs current playlist
+            //take first track from playlist out
+            var justPlayed = self.currentList.tracks.shift()
+
+            //and add it to the back
+            self.currentList.tracks.push(justPlayed)
+            
+            //post new current list order
+            U.ajax('POST', '/api/playlistorder', function(playlist) {
+                //get the next dj spot
+                var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
+                self.setCurrentPlaylist(playlist)
+                self.playTrackBy(self.room.djs[nextDj], nextDj)
+                self.update()
+            }, self.currentList)
+            //removing because it should be handled by socket update
+            /*else {
                 //if user is not dj
                 var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
                 self.playTrackBy(self.room.djs[nextDj], nextDj)
                 self.update()
-            }
+            }*/
         }
 
         //user likes the track!
@@ -476,9 +479,7 @@
             var startNewDj = false
             if(room.currentDj && self.room) {
                 //the last dj quit while playing
-                console.log(self.room.currentDj)
                 if(self.room.currentDj) {
-                    console.log('fail: ' +room.currentDj.googleId, self.room.currentDj.googleId)
                     if(room.currentDj.googleId != self.room.currentDj.googleId) {
                         //start new dj after update
                         startNewDj = true
@@ -669,17 +670,23 @@
 
             //if current user is the next dj to play
             if(dj.googleId == self.user.googleId) {
-                self.userIsPlayling = true
-                //set the next current track to play in the room
-                //send the first item of their current playlist to the room
-                console.log('setting start date ')
-                U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
-                    //socket emits room_track_changed
-                }, {
-                    track: self.currentList.tracks[0], 
-                    date: new Date().toString(),
-                    dj: {spot: spot, googleId: dj.googleId}
-                })
+                //make sure user has a track to play
+                if(self.currentList.tracks) {
+                    self.userIsPlayling = true
+                    //set the next current track to play in the room
+                    //send the first item of their current playlist to the room
+                    console.log('setting start date ')
+                    U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
+                        //socket emits room_track_changed
+                    }, {
+                        track: self.currentList.tracks[0], 
+                        date: new Date().toString(),
+                        dj: {spot: spot, googleId: dj.googleId}
+                    })
+                } else {
+                    //if they dont have a track ready, quit and stay in room
+                    quitDj(true)
+                }
             }
         }
 
