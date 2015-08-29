@@ -348,6 +348,7 @@ function createServer() {
     //remove a track from a playlist
     app.post('/api/removetrack', function (req, res) {
         Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
+            console.log('got playlist with id '+req.body.playlistId)
             if(!err) {
                 //remove track from playlist
                 for(var i=0, l=playlist.tracks.length; i<l; i++) {
@@ -369,7 +370,7 @@ function createServer() {
     //when a track finishes playing, move it to last in list
     //when a user changes the order of their playlist
     app.post('/api/playlistorder', function (req, res) {
-        Playlist.findOne({_id: req.body.playlistId}, function(err, playlist) {
+        Playlist.findOne({_id: req.body._id}, function(err, playlist) {
             if(!err) {
                 //delete the track indexes
                 for(var i=0, l=req.body.tracks.length; i<l; i++) {

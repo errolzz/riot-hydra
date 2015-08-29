@@ -52,10 +52,10 @@
                     </div>
                     <div class="track-holder">
                         <ul class="tracks {userIsPlayling?'playing':''}">
-                            <li class="playlist-track" each={currentList.tracks} onmousedown={startTrackDrag}>
+                            <li class="playlist-track" each={currentList.tracks}>
                                 <span class="delete" title="Delete" onclick={removeFromPlaylist}>x</span>
                                 <span class="num">{index}.</span> 
-                                <span class="title">{title}</span>
+                                <span class="title" onmousedown={startTrackDrag}>{title}</span>
                                 <span class="arrow-up" onclick={moveTrackToTop}></span>
                             </li>
                         </ul>
@@ -461,6 +461,7 @@
 
         //check if the current user is in the room provided
         userInRoom(room) {
+            if(!self.user) return false
             //only update room if it's the one user is in
             //is this really the best way to limit this?
             var isAud = U.getOne('_id', self.user._id, room.audience)
@@ -860,6 +861,7 @@
 
         //remove a clicked track from a playlist
         removeFromPlaylist(e) {
+            console.log('removing from '+self.currentList._id)
             U.ajax('POST', '/api/removetrack', function(updatedPlylist) {
                 self.setCurrentPlaylist(updatedPlylist)
                 self.update()
@@ -871,10 +873,11 @@
 
         //on mouse down on track
         startTrackDrag(e) {
+            console.log('dragging')
             //prevent user from dragging current playing track
             if(self.userIsPlayling && e.item.index == 0) return
             
-            var t = e.currentTarget
+            var t = e.currentTarget.parentElement
             var startY = e.clientY
             var oldClass = t.className
             var newSpot = oldSpot = e.item.index - 1
@@ -889,7 +892,6 @@
 
             //on release
             document.body.onmouseup = function(e) {
-
                 t.className = oldClass
                 t.style.top = '0px';
 
@@ -916,6 +918,8 @@
                 self.setCurrentPlaylist(self.currentList)
                 self.update()
 
+                console.log(self.currentList)
+                
                 //post new current list order
                 U.ajax('POST', '/api/playlistorder', function(playlist) {
                     self.setCurrentPlaylist(playlist)
