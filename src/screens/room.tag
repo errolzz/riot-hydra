@@ -209,7 +209,7 @@
                     startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
                     console.log('seeking to ' + startTime + 0.666)
                     //only seek if not playing track
-                    if(!userIsPlayling) self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
+                    if(!self.userIsPlayling) self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
                 }
 
                 //video is playing
@@ -919,7 +919,7 @@
                 self.update()
 
                 console.log(self.currentList)
-                
+
                 //post new current list order
                 U.ajax('POST', '/api/playlistorder', function(playlist) {
                     self.setCurrentPlaylist(playlist)

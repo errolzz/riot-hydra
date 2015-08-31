@@ -5,12 +5,16 @@ TODO:
 
 different chatter colors
 
+make first time users follow direct room link
+ipad touch event for room list?
+set hard limit on track name
+
 
 BUGS:
 ------------------------------------------------------------------------
 
+skip button broken
 joining a room causes current dj to reset start date of current video
-users overwriting others playlists with their own??
 when leaving a room, a dj may not appear to leave for other users
 last video played in a player persists into new rooms (maybe only rooms with no current video?)
 
