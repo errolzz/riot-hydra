@@ -80,7 +80,7 @@ function AppStore() {
                         }
                         
                         //update room in db with new audience and djs
-                        U.ajax('PUT', '/api/roomusers/' + room._id, function(updatedRoom) {
+                        U.ajax('PUT', '/api/updateroom/' + room._id, function(updatedRoom) {
                             //user joined room
                             self.trigger('screen_changed', 'room');
                             self.trigger('render_room', self.user, updatedRoom);

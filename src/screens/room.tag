@@ -258,6 +258,9 @@
 
         //can/should only be called by the current playing user, when their song ends
         prepNextTrack() {
+            //reset uesr playing
+            self.userIsPlayling = false
+            
             //when video ends move it to the end of current djs current playlist
             //take first track from playlist out
             var justPlayed = self.currentList.tracks.shift()
@@ -267,17 +270,31 @@
             
             //post new current list order
             U.ajax('POST', '/api/playlistorder', function(playlist) {
-                //get the next dj spot
-                var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
+                //update users playlist
                 self.setCurrentPlaylist(playlist)
-                self.playTrackBy(self.room.djs[nextDj], nextDj)
                 self.update()
             }, self.currentList)
+
+
+            //update next room dj
+            //get the next dj spot
+            var nextDjSpot = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
+            console.log('nextDj ' + nextDjSpot)
+
+            var nextDj = {nextDjSpot: nextDjSpot, nextDjId: self.room.djs[nextDjSpot].googleId}
+            //set the next currentDj in the room
+            //updateRoom should start them playing
+            U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
+                //will fire room_users_changed
+                console.log(updatedRoom)
+            }, nextDj)
+            
+
             //removing because it should be handled by socket update
             /*else {
                 //if user is not dj
                 var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
-                self.playTrackBy(self.room.djs[nextDj], nextDj)
+                self.playMyNextTrack(self.room.djs[nextDj], nextDj)
                 self.update()
             }*/
         }
@@ -296,7 +313,7 @@
             roomUser.likeLeft = true
 
             //update room users
-            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+            U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
             }, {audience: self.room.audience, djs: self.room.djs})
         }
@@ -316,7 +333,7 @@
                 delete self.room.djs[j].likeLeft
             }
             //update room users
-            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+            U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
             }, {audience: self.room.audience, djs: self.room.djs})
         }
@@ -379,6 +396,11 @@
                 if(self.currentList) {
                     //if currentList is ready (and everything else) update room now
                     self.updateRoom(updatedRoom)
+                    try {
+                        console.log('prepped next track ' + updatedRoom.currentDj.googleId)
+                    } catch(e) {
+
+                    }
                 } else {
                     //otherwise save updated room but dont render yet
                     self.room = updatedRoom
@@ -389,7 +411,6 @@
         //listen for track changes
         socket.on('room_track_changed', function(updatedRoom) {
             self.clearProgress()
-            console.log('room_track_changed')
             self.clearLikes()
             self.setupLikeTimer()
             self.setupPlayer(updatedRoom)
@@ -479,17 +500,26 @@
             //if the next dj should start playing
             var startNewDj = false
             if(room.currentDj && self.room) {
+                console.log('new room has dj and room exists')
                 //the last dj quit while playing
                 if(self.room.currentDj) {
+                    console.log('room had dj')
+                    console.log(room.currentDj.googleId, self.room.currentDj.googleId)
                     if(room.currentDj.googleId != self.room.currentDj.googleId) {
-                        //start new dj after update
-                        startNewDj = true
+                        console.log('dj is different than before')
+                        //start new dj if user is newly assigned dj
+                        if(room.currentDj.googleId == self.user.googleId) {
+                            console.log('same id')
+                            startNewDj = true
+                        }
                     }
                 }
             } else if(!self.room) {
                 //no self.room defined, first room update
                 //this starts the current track video when entering a room
-                startNewDj = true
+                //startNewDj = true
+                self.createPlayer()
+                self.update()
             }
 
             //update new room data
@@ -516,10 +546,10 @@
                 //set current dj flag on dj
                 room.djs[room.currentDj.spot].isPlaying = true
 
-                //strat the video if needed
+                //start the video if needed
                 if(startNewDj) {
                     console.log('starting new dj')
-                    self.playTrackBy(room.djs[room.currentDj.spot], room.currentDj.spot)
+                    self.playMyNextTrack(self.user, room.currentDj.spot)
                 }
             } else {
                 //no djs
@@ -541,12 +571,12 @@
             self.openDj = false
 
             //send updated room djs and audience
-            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+            U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
                 //if the user is the only dj
                 if(updatedRoom.djs.length == 1) {
                     //start playing the first song in their current playlist
-                    self.playTrackBy(self.user, 0);
+                    self.playMyNextTrack(self.user, 0);
                 }
             }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})
         }
@@ -575,7 +605,7 @@
             }
 
             if(stayInRoom) {
-                U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+                U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                     //updated room is sent via socket as room_users_changed
                 }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})
             }
@@ -654,7 +684,7 @@
             self.chatLog = []
             console.log('leaving room')
             //send updated room djs and audience
-            U.ajax('PUT', '/api/roomusers/' + self.room._id, function(updatedRoom) {
+            U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
                 //if leaving room from leave room link, switch to lobby
                 if(forceLobby) RiotControl.trigger('room.left_room')
@@ -663,32 +693,33 @@
 
         //called from first dj stepping up
         //also from when current djs song ends
-        playTrackBy(dj, spot) {
-            //reset uesr playing
-            self.userIsPlayling = false
+        playMyNextTrack(dj, spot) {
+            
             //make sure local room has correct dj
             self.room.currentDj = {spot: spot, googleId: dj.googleId}
-
+            
             //if current user is the next dj to play
-            if(dj.googleId == self.user.googleId) {
+            //if(dj.googleId == self.user.googleId) {
                 //make sure user has a track to play
                 if(self.currentList.tracks) {
                     self.userIsPlayling = true
                     //set the next current track to play in the room
                     //send the first item of their current playlist to the room
                     console.log('setting start date ')
+                    var djData = {
+                        track: self.currentList.tracks[0], 
+                        date: new Date().toString()
+                    };
+                    console.log(djData)
                     U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                         //socket emits room_track_changed
-                    }, {
-                        track: self.currentList.tracks[0], 
-                        date: new Date().toString(),
-                        dj: {spot: spot, googleId: dj.googleId}
-                    })
+                        console.log('changed room track')
+                    }, djData)
                 } else {
                     //if they dont have a track ready, quit and stay in room
                     quitDj(true)
                 }
-            }
+            //}
         }
 
         //create the new playlist

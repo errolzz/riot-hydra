@@ -119,8 +119,7 @@ function createServer() {
             room.currentTrack = req.body.track;
             //set the time the track was set as current
             room.currentTrack.date = req.body.date;
-            //update the dj of the new track
-            room.currentDj = req.body.dj;
+            
             //save the room with new current track
             room.save(function(err) {
                 if(!err) {
@@ -134,11 +133,11 @@ function createServer() {
     });
     
     //update a rooms users
-    app.put('/api/roomusers/:id', function (req, res) {
+    app.put('/api/updateroom/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
-
+            console.log('next dj id ' + req.body.nextDjId)
             //not sure why this body can be undefined...
-            if(!req.body) {
+            if(!req.body || !room) {
                 console.log('/api/roomusers/:id req.body undefined')
                 return
             }
@@ -146,6 +145,15 @@ function createServer() {
             //update room audience
             if(req.body.audience) {
                 room.audience = req.body.audience;
+            }
+
+            //update the dj of the new track
+            if(req.body.nextDjId) {
+                room.currentDj = {
+                    googleId: req.body.nextDjId,
+                    spot: req.body.nextDjSpot
+                };
+                console.log('updating room dj')
             }
 
             //update room djs
