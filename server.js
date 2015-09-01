@@ -135,7 +135,6 @@ function createServer() {
     //update a rooms users
     app.put('/api/updateroom/:id', function (req, res) {
         Room.findById(req.params.id, function (err, room) {
-            console.log('next dj id ' + req.body.nextDjId)
             //not sure why this body can be undefined...
             if(!req.body || !room) {
                 console.log('/api/roomusers/:id req.body undefined')

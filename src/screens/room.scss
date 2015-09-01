@@ -1,4 +1,11 @@
 room {
+    .green-text {color: $highlight;}
+    .aqua-text {color: #0abbd0;}
+    .pink-text {color: #c259b2;}
+    .purple-text {color: #9261da;}
+    .blue-text {color: #385dfb;}
+    .brown-text {color: #7e764b;}
+
     .avatar {
         position: relative;
         width: 42px;
@@ -404,9 +411,6 @@ room {
 
             .message {
                 margin-bottom: 22px;
-                .user {
-                    color: $highlight;
-                }
             }
 
             &:hover {
