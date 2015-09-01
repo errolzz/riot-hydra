@@ -3,12 +3,12 @@
 TODO:
 ------------------------------------------------------------------------
 
+joining old room, user gets stuck there?
+song ended, didnt move to next DJ
+video progress janky
+drag and drop songs broken
 ipad touch event for room list?
 set hard limit on track name
-
-
-BUGS:
-------------------------------------------------------------------------
 
 
 joining a room causes current dj to reset start date of current video
