@@ -7,7 +7,6 @@ function AppStore() {
     self.user = undefined;
 
     self.signedIn = function(profile) {
-
         //check if user has been here before
         U.ajax('GET', '/api/users/' + profile.googleId, function(data) {
             //if no user was found
@@ -42,8 +41,7 @@ function AppStore() {
     //APP / ROUTER
     self.on('app.app_mounted', function() {
 
-        riot.route(function(p1, p2, p3) {
-            
+        riot.route(function(p1, p2, p3) {    
             if(self.inRoom) self.trigger('force_leave_room');
 
             //DEFAULT LOGIN
@@ -62,7 +60,7 @@ function AppStore() {
 
             } else if(p1 == 'room') {
                 //ENTER A ROOM
-
+                console.log('hit room')
                 self.inRoom = true;
                 
                 //get latest list of rooms
@@ -103,7 +101,12 @@ function AppStore() {
             if(data.googleId) {
                 //update local user
                 self.user = data;
-                riot.route('lobby');
+                //route either to lobby, or to room in url
+                if(window.location.hash.toString().indexOf('#room/') == 0) {
+                    window.location.reload();
+                } else {
+                    riot.route('lobby');
+                }
             }
         }, user);
     });

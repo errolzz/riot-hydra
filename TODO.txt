@@ -3,9 +3,6 @@
 TODO:
 ------------------------------------------------------------------------
 
-different chatter colors
-
-make first time users follow direct room link
 ipad touch event for room list?
 set hard limit on track name
 
