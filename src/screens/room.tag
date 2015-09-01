@@ -84,7 +84,7 @@
         <div class="chat">
             <p class="room-name">{room.name}</p>
             <div id="convo" class="convo">
-                <p each={chatLog} class="message"><span class="user">{username}:</span> <span class="text"> {message}</span></p>
+                <p each={chatLog} class="message"><span class="user {color}">{username}:</span> <span class="text"> {message}</span></p>
             </div>
             <input class="chat-box" type="text" placeholder="chat" onkeyup={chatMessageChange} value={chatMessage}>
         </div>
@@ -134,13 +134,19 @@
         var self = this
         self.creatingPlaylist = false
         self.playlistToDelete = undefined
+        self.chatColors = [
+            'green-text',
+            'aqua-text',
+            'pink-text',
+            'purple-text',
+            'blue-text',
+            'brown-text'
+        ]
         self.chatLog = []
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
             //let self.room get set in updateRoom
-
-            console.log('render_room')
 
             //get users playlists
             self.getUserPlaylists(function() {
@@ -347,11 +353,37 @@
                 socket.emit('chat_message', {
                     googleId: self.user.googleId,
                     username: self.user.name,
+                    color: self.getChatColor(),
                     message: encodeURIComponent(self.chatMessage.trim())
                 })
                 //clear message
                 self.chatMessage = ''
             }
+        }
+
+        getChatColor() {
+            //look for user in chat log
+            for(var i=0, l=self.chatLog.length; i<l; i++) {
+                //use same chat color as previously
+                if(self.user.name == self.chatLog[i].username) {
+                    return self.chatLog[i].color
+                }
+            }
+            //if user isnt in the chat log
+            var c, nc, cl = self.chatLog.length
+            while(!c) {
+                nc = Math.floor(Math.random()*self.chatColors.length)
+                if(cl == 0) {
+                    c = self.chatColors[nc]
+                } else if(cl == 1 && nc != self.chatLog[0].color) {
+                    c = self.chatColors[nc]
+                } else if(nc != self.chatLog[cl-1].color && nc != self.chatLog[cl-2].color) {
+                    c = self.chatColors[nc]
+                } else {
+                    //console.log('tried to be prev color')
+                }
+            }
+            return c
         }
 
         //update chat
@@ -705,12 +737,11 @@
                     self.userIsPlayling = true
                     //set the next current track to play in the room
                     //send the first item of their current playlist to the room
-                    console.log('setting start date ')
                     var djData = {
                         track: self.currentList.tracks[0], 
                         date: new Date().toString()
                     };
-                    console.log(djData)
+                    
                     U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
                         //socket emits room_track_changed
                         console.log('changed room track')
