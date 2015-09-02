@@ -10,8 +10,6 @@ var server = app.listen((process.env.PORT || 8000), createServer);
 
 var io = socketIo(server);
 
-
-
 //on socket connect
 io.on('connection', function (socket) {
     //listen for chat messages

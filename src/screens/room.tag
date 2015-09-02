@@ -362,14 +362,25 @@
         }
 
         getChatColor() {
-            //look for user in chat log
-            for(var i=0, l=self.chatLog.length; i<l; i++) {
-                //use same chat color as previously
+            var color
+            //loop through chat log in reverse
+            for (var i = self.chatLog.length - 1; i >= 0; i--) {
+                //look for user in chat log
                 if(self.user.name == self.chatLog[i].username) {
-                    return self.chatLog[i].color
+                    //save their last color
+                    color = self.chatLog[i].color
                 }
             }
-            //if user isnt in the chat log
+            //if the last message did not use their color
+            if(color) {
+                if(color != self.chatLog[self.chatLog.length-1].color ||
+                    self.user.name == self.chatLog[self.chatLog.length-1].username) {
+                    return color
+                }
+            }
+
+            //if user isnt in the chat log or their color was used
+            //get them a new color
             var c, nc, cl = self.chatLog.length
             while(!c) {
                 nc = Math.floor(Math.random()*self.chatColors.length)
