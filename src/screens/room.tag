@@ -51,20 +51,17 @@
         RiotControl.on('render_room', function(user, room) {
             self.user = user
 
-            console.log('render room')
-            RiotControl.trigger('room.init', user)
-
-            //update room after lists are loaded
-            self.updateRoom(room)
-
-            //set up youtube player
-            self.setupPlayer(room)
-
             //leave room if the user closes the window
             //also happens on refresh
             window.onbeforeunload = function() {
                 self.leaveRoom()
             }
+
+            //update user in components
+            RiotControl.trigger('room.init', user)
+
+            //update room after lists are loaded
+            self.renderRoom(room)
 
             //socket will also emit room_users_changed at this point
         })
@@ -76,8 +73,8 @@
             self.update()
         })
 
-        RiotControl.on('force_leave_room', function() {
-            self.leaveRoom()
+        RiotControl.on('leave_room', function(stayInRoom) {
+            self.leaveRoom(stayInRoom)
         })
 
         RiotControl.on('update_user', function(user) {
@@ -245,7 +242,7 @@
 
                 if(self.currentList) {
                     //if currentList is ready (and everything else) update room now
-                    self.updateRoom(updatedRoom)
+                    self.renderRoom(updatedRoom)
                     try {
                         console.log('prepped next track ' + updatedRoom.currentDj.googleId)
                     } catch(e) {
@@ -344,7 +341,7 @@
         }
 
         //refresh room with new data
-        updateRoom(room) {
+        renderRoom(room) {
             //if the next dj should start playing
             var startNewDj = false
             if(room.currentDj && self.room) {
@@ -359,13 +356,15 @@
                     }
                 }
                 
-            } else if(!self.room) {
+            }/* else if(!self.room) {
                 //no self.room defined, first room update
                 //this starts the current track video when entering a room
                 //startNewDj = true
+                console.log('eh')
                 self.createPlayer()
+                console.log('eh22')
                 self.update()
-            }
+            }*/
 
             //update new room data
             RiotControl.trigger('update_room', room)
@@ -454,24 +453,20 @@
             }
         }
 
-        leaveRoomClicked(e) {
-            self.leaveRoom(true)
-        }
-
         //go back to the lobby
         leaveRoom(forceLobby) {
             window.onbeforeunload = undefined
             clearInterval(self.likeTimer)
-            
+            console.log('leave1')
             //if user was dj, quit dj
             if(self.userIsDj) self.quitDj()
 
             //remove user from local audience
             U.removeOne('_id', self.user._id, self.room.audience)
-
+            console.log('leave2')
             //clear video
             self.stopVideo()
-
+            console.log('leave3')
             //clear chat
             self.chatLog = []
             console.log('leaving room')

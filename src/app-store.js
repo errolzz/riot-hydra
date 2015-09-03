@@ -42,7 +42,7 @@ function AppStore() {
     self.on('app.app_mounted', function() {
 
         riot.route(function(p1, p2, p3) {    
-            if(self.inRoom) self.trigger('force_leave_room');
+            if(self.inRoom) self.trigger('leave_room', false);
 
             //DEFAULT LOGIN
 

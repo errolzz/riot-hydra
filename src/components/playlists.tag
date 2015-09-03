@@ -114,6 +114,11 @@
             self.update()
         })
 
+        leaveRoomClicked(e) {
+            //true lets user stay in room
+            RiotControl.trigger('leave_room', true)
+        }
+
         //gets the users playlist data
         getUserPlaylists(callback) {
             var listUrl = '/api/playlists/'
