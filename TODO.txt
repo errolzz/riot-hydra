@@ -5,14 +5,12 @@ TODO:
 
 joining old room, user gets stuck there?
 
-drag and drop songs broken
-set hard limit on track name
+drag and drop songs broken?
 joining a room causes current dj to reset start date of current video
 
 
 song ended, didnt move to next DJ
 video progress janky
-last video played in a player persists into new rooms (maybe only rooms with no current video?)
 
 
 

@@ -1,7 +1,6 @@
 <room>
     <section>
         <playlists />
-
         <chat />
 
         <!-- stage -->
@@ -23,7 +22,7 @@
                 </div>
                 <button class="quit-dj" show={userIsDj} onclick={quitDjClicked}>Quit DJ</button>
                 <div class="overlay" show={room.currentTrack}>
-                    <p class="title">{room.currentTrack.title}</p>
+                    <div class="title"><p>{room.currentTrack.title}</p></div>
                     <button class="mute" onclick={toggleMute}>
                         <span hide={playerMuted}>Mute</span><span show={playerMuted}>Unmute</span>
                     </button>
@@ -104,42 +103,6 @@
                 }
                 self.update()
             }, 666)
-        }
-
-        //handle youtube player state changes
-        onPlayerStateChange(e) {
-            if(e.data == 2) {
-                //play video immediately if paused
-                self.player.playVideo()
-            } else if(e.data == 1) {
-                if(self.lastVideoState != 1 && self.lastVideoState != 3) {
-                    //get time passed in seconds from current track start date to now
-                    var startTime = 0
-                    startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
-                    console.log('seeking to ' + startTime + 0.666)
-                    //only seek if not playing track
-                    if(!self.userIsPlayling) self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
-                }
-
-                //video is playing
-                if(self.room.djs.length == 0) {
-                    self.stopVideo()
-                }
-
-                self.clearProgress()
-
-                //start progress bar
-                self.progressTimer = setInterval(function() {
-                    var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
-                    document.getElementById('progress-bar').style.width = percent + '%'
-                }, 50)
-            } else if(e.data == 0) {
-                //if the user was playing, prep next track to play
-                if(self.userIsPlayling) self.prepNextTrack()
-            }
-
-            //save video state
-            self.lastVideoState = e.data
         }
 
         toggleMute() {
@@ -255,32 +218,6 @@
             }
         })
 
-        //listen for track changes
-        socket.on('room_track_changed', function(updatedRoom) {
-            self.clearProgress()
-            self.clearLikes()
-            self.setupLikeTimer()
-            self.setupPlayer(updatedRoom)
-        })
-
-        //set up player to play a video
-        setupPlayer(room) {
-            //if user is in the room, and there is a current track
-            if(self.userInRoom(room) && room.currentTrack) {
-                //load youtube player with current track
-                RiotControl.trigger('update_room', room)
-                //play the current track if there is one
-                if(self.player) {
-                    self.player.loadVideoById(room.currentTrack._id)
-                    self.player.playVideo();
-                } else {
-                    self.createPlayer()
-                }
-
-                self.update()
-            }
-        }
-
         //check which users avatars have not yet loaded
         findNewAvatars(oldRoomUsers, newRoomUsers) {
             var newUsers = []
@@ -312,7 +249,7 @@
             self.player = new YT.Player('yt-player', {
                 videoId: self.room.currentTrack._id,
                 playerVars: {
-                    autoplay: 1,
+                    //autoplay: 1,
                     controls: 0,
                     disablekb: 1,
                     modestbranding: 1,
@@ -320,10 +257,83 @@
                     showinfo: 0
                 },
                 events: {
+                    'onReady': self.onPlayerReady,
                     'onStateChange': self.onPlayerStateChange
                 }
             })
             self.playerMuted = false
+        }
+
+        //only called from initial player creation
+        onPlayerReady(e) {
+            console.log('player ready')
+            if(self.autoPlay) {
+                self.player.playVideo()
+                self.autoPlay = false
+            }
+        }
+
+        //handle youtube player state changes
+        onPlayerStateChange(e) {
+            if(e.data == 2) {
+                //play video immediately if paused
+                self.player.playVideo()
+            } else if(e.data == 1) {
+                if(self.lastVideoState != 1 && self.lastVideoState != 3) {
+                    //get time passed in seconds from current track start date to now
+                    var startTime = 0
+                    startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
+                    console.log('seeking to ' + startTime + 0.666)
+                    //only seek if not playing track
+                    if(!self.userIsPlayling) self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
+                }
+
+                //video is playing
+                if(self.room.djs.length == 0) {
+                    self.stopVideo()
+                }
+
+                self.clearProgress()
+
+                //start progress bar
+                self.progressTimer = setInterval(function() {
+                    var percent = self.player.getCurrentTime() / self.player.getDuration() * 100
+                    document.getElementById('progress-bar').style.width = percent + '%'
+                }, 50)
+            } else if(e.data == 0) {
+                //if the user was playing, prep next track to play
+                if(self.userIsPlayling) self.prepNextTrack()
+            }
+
+            //save video state
+            self.lastVideoState = e.data
+        }
+
+        //listen for track changes
+        socket.on('room_track_changed', function(updatedRoom) {
+            self.clearProgress()
+            self.clearLikes()
+            self.setupLikeTimer()
+            self.setupPlayer(updatedRoom)
+        })
+
+        //set up player to play a video
+        setupPlayer(room) {
+            //if user is in the room, and there is a current track
+            if(self.userInRoom(room) && room.currentTrack) {
+                //load youtube player with current track
+                RiotControl.trigger('update_room', room)
+                //play the current track if there is one
+                if(self.player) {
+                    self.player.loadVideoById(room.currentTrack._id)
+                    self.player.playVideo();
+                } else {
+                    self.autoPlay = true
+                    self.createPlayer()
+                }
+
+                self.update()
+            }
         }
 
         //check if the current user is in the room provided
@@ -418,6 +428,7 @@
                 //if the user is the only dj
                 if(updatedRoom.djs.length == 1) {
                     //start playing the first song in their current playlist
+                    console.log('im DJ!')
                     self.playMyNextTrack(self.user, 0);
                 }
             }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})

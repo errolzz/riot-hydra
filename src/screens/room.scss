@@ -110,13 +110,16 @@ room {
                     position: absolute;
                     left: 80px;
                     top: 10px;
-                    padding: 12px 13px;
                     overflow: hidden;
                     width: calc(100% - 80px);
                     height: 42px;
                     background: $black;
-                    color: $white;
-                    font-weight: 500;
+                    
+                    p {
+                        color: $white;
+                        font-weight: 500;
+                        padding: 12px 13px; 
+                    }
                 }
                 .like {
                     position: absolute;
