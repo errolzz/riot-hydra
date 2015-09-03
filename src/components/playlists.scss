@@ -1,0 +1,327 @@
+playlists {
+    position: relative;
+    width: 25%;
+    border-right: 2px solid $gray-dark;
+
+    .search {
+        @include text-field();
+        margin: 0 0 30px;
+        width: 25%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+    }
+
+    .search-results {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 90;
+        padding: 0 13px 13px;
+
+        &.searching {
+            display: block;
+            background: $gray-dark;
+        }
+
+        .search-close {
+            @include action-text();
+            position: fixed;
+            font-size: $med-font;
+            z-index: 100;
+            top: 70px;
+            left: 13px;
+        }
+
+        .results-header {
+            position: fixed;
+            font-size: $med-font;
+            top: 70px;
+            right: 13px;
+            .query {
+                color: $highlight;
+            }
+        }
+
+        .results-holder {
+            @include flexbox();
+            flex-wrap: wrap;
+            margin: 110px -7px;
+            height: calc(100% - 110px);
+            overflow-y: scroll;
+            padding-bottom: 50px;
+        }
+
+        .result {
+            padding: 0 7px;
+            margin-bottom: 26px;
+            width: 20%;
+
+            img, iframe {
+                display: block;
+                margin-bottom: 13px;
+            }
+
+            .preview {
+                position: relative;
+                cursor: pointer;
+                .preview-arrow {
+                    position: absolute;
+                    top: 9px;
+                    left: 10px;
+                    width: 0; 
+                    height: 0; 
+                    border-top: 12px solid transparent;
+                    border-bottom: 12px solid transparent;
+                    border-left: 12px solid $pink;
+                    display: none;
+                }
+                &:hover {
+                    .preview-arrow {
+                        display: block;
+                    }
+                }
+            }
+            
+            .title {
+                color: $white;
+                margin-bottom: 10px;
+            }
+            .add {
+                @include action-text();
+            }
+            .added {
+                color: $white;
+                background: $pink;
+                display: inline-block;
+                padding: 0 2px;
+                cursor: default;
+            }
+        }
+    }
+
+    .container {
+        margin-top: 72px;
+        padding: 0 13px 13px;
+
+        &.list-open {
+            .dropdown {
+                .arrow-holder {
+                    .arrow-up {
+                        display: block;
+                        border-bottom: 5px solid $white;
+                    }
+                    .arrow-down {
+                        display: none;
+                    }
+                }
+                .selected {
+                    display: none;
+                }
+                .options {
+                    display: block;
+                    li {
+                        margin-bottom: 10px;
+                    }
+                }
+            }
+            .tracks {
+                display: none;
+            }
+        }
+    }
+
+    .dropdown {
+        margin-bottom: 22px;
+        cursor: pointer;
+        position: relative;
+
+        .arrow-holder {
+            position: absolute;
+            pointer-events: none;
+            top: 7px;
+            right: 0px;
+            .arrow-up {
+                display: none;
+            }
+            .arrow-down {
+                display: block;
+            }
+        }
+        .selected {
+            color: $pink;
+        }
+        .options {
+            display: none;
+
+            li {
+                .spacer {
+                    display: inline-block;
+                    width: 16px;
+                }
+                .delete {
+                    display: none;
+                    @include action-text();
+                    text-transform: uppercase;
+                    width: 16px;
+                    font-weight: 700;
+                }
+                .title {
+                    @include action-text();
+                    padding-right: 20px;
+                    max-width: calc(100% - 30px);
+                    display: inline-block;
+                    vertical-align: top;
+                }
+                &:first-child {
+                    color: $gray-light;
+                }
+                &:hover {
+                    .spacer {
+                        display: none;
+                    }
+                    .delete {
+                        display: inline-block;
+                    }
+                }
+            }
+        }
+    }
+
+    .track-holder {
+        overflow-y: hidden;
+        height: calc(100% - 154px);
+
+        &:hover {
+            overflow-y: scroll;
+        }
+    }
+
+    .tracks {
+        li {
+            margin-bottom: 22px;
+            position: relative;
+
+            .num {
+                display: inline-block;
+                width: 16px;
+                color: $gray-med;
+            }
+            .delete {
+                display: none;
+                @include action-text();
+                text-transform: uppercase;
+                width: 16px;
+                font-weight: 700;
+            }
+            .title {
+                padding-right: 20px;
+                cursor: ns-resize;
+                max-width: calc(100% - 30px);
+                display: inline-block;
+                vertical-align: top;
+            }
+            .arrow-up {
+                position: absolute;
+                display: none;
+                float: right;
+                top: 8px;
+                right: 0px;
+                cursor: pointer;
+                &:hover {
+                    border-bottom: $arrow-size solid $white;
+                }
+            }
+            &:hover {
+                .num {
+                    display: none;
+                }
+                .delete {
+                    display: inline-block;
+                }
+                .arrow-up {
+                    display: block;
+                }
+            }
+            &.dragging {
+                background: $pink;
+                z-index: 100;
+            }
+        }
+        &.playing {
+            li {
+                &:first-child {
+                    pointer-events: none;
+                }
+            }
+        }
+    }
+
+    .new-playlist {
+        margin-top: 20px;
+        button {
+            width: 100%;
+            margin-top: 3px;
+        }
+    }
+
+    .create-playlist {
+        .name-label {
+            margin-bottom: 13px;
+        }
+
+        .playlist-name {
+            @include text-field();
+            display: block;
+            width: 100%;
+            margin-bottom: 13px
+        }
+
+        .cancel-btn {
+            @include action-text();
+            float: left;
+            margin-top: 12px;
+        }
+        .create-btn {
+            float: right;
+        }
+
+        &.posting {
+            pointer-events: none;
+        }
+    }
+
+    .delete-playlist {
+        .warning {
+            margin-bottom: 13px;
+            span {
+                color: $highlight;
+            }
+        }
+        .cancel-btn {
+            @include action-text();
+            float: left;
+            margin-top: 12px;
+        }
+        .delete-btn {
+            float: right;
+        }
+    }
+
+    .user {
+        position: absolute;
+        bottom: 13px;
+        left: 13px;
+        .name {
+            font-weight: 700;
+            color: $highlight;
+        }
+        .leave {
+            @include action-text();
+        }
+    }
+}

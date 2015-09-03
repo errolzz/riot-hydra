@@ -1,93 +1,8 @@
 <room>
     <section>
-        <div class="sidebar">
-            <input class="search" onkeyup={searchChanged} type="text" placeholder="search music" value={query}>
+        <playlists />
 
-            <!-- search results -->
-            <div class="search-results {searching?'searching':''}">
-                <p class="search-close" onclick={closeSearch}>Back to room</p>
-                <p class="results-header"><span class="query">{query}</span> search results</p>
-                <ul class="results-holder">
-                    <li class="result" each={searchResults}>
-                        <iframe id="yt-preview" if={preview} class="preview-player" type="text/html" 
-                            width="100%" height="auto" 
-                            frameborder="0"
-                            src="http://www.youtube.com/embed/{id.videoId}?autoplay=1&enablejsapi=1">
-                        </iframe>
-                        <div class="preview">
-                            <img hide={preview} onclick={previewTrack} src="{snippet.thumbnails.medium.url}" width="100%" alt="" />
-                            <div class="preview-arrow"></div>
-                        </div>
-                        <p class="title">{snippet.title}</p>
-                        <p hide={added} class="add" onclick={addToPlaylist}>+ Add to playlist</p>
-                        <p show={added} class="added">In playlist!</p>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- playlists -->
-            <div id="playlists" class="container {selectingList?'list-open':''}">
-                <div show={currentList && !creatingPlaylist} hide={playlistToDelete} class="playlists">
-                    <div class="dropdown">
-                        <div class="arrow-holder">
-                            <div class="arrow-down"></div>
-                            <div class="arrow-up"></div>
-                        </div>
-                        <div class="selected" onclick={openPlaylists}>
-                            <p>{currentList.name}</p>
-                        </div>
-                        <div class="options">
-                            <ul>
-                                <li onclick={closePlaylists}>Select a playlist</li>
-                                <li each={playlists}>
-                                    <span class="delete" title="Delete" onclick={toggleDeletePlaylist}>x</span>
-                                    <span class="spacer">&nbsp;</span> 
-                                    <span class="title" onclick={selectPlaylist}>{name}</span>
-                                </li>
-                            </ul>
-                            <div class="new-playlist">
-                                <button onclick={togglePlaylistForm}>+ Create new playlist</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="track-holder">
-                        <ul class="tracks {userIsPlayling?'playing':''}">
-                            <li class="playlist-track" each={currentList.tracks}>
-                                <span class="delete" title="Delete" onclick={removeFromPlaylist}>x</span>
-                                <span class="num">{index}.</span> 
-                                <span class="title" onmousedown={startTrackDrag}>{title}</span>
-                                <span class="arrow-up" onclick={moveTrackToTop}></span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div show={creatingPlaylist} class="create-playlist {postingPlaylist?'posting':''}">
-                    <p class="name-label">Give your new playlist a name:</p>
-                    <input class="playlist-name" type="text" placeholder="playlist name" onkeyup={playlistNameChange} value={newPlaylistName}>
-
-                    <p class="cancel-btn" onclick={togglePlaylistForm}>Cancel</p>
-                    <button class="create-btn" type="button" onclick={createPlaylist}>Create</button>
-                </div>
-
-                <div show={playlistToDelete} class="delete-playlist">
-                    <p class="warning">Really delete <span>{playlistToDelete.name}</span>?</p>
-                    <p class="cancel-btn" onclick={toggleDeletePlaylist}>Cancel</p>
-                    <button class="delete-btn" type="button" onclick={deletePlaylist}>Delete</button>
-                </div>
-
-                <p class="user"><span class="name">{user.name}</span> - <span class="leave" onclick={leaveRoomClicked}>Leave room</span></p>
-            </div>
-        </div>
-
-        <!-- chat -->
-        <div class="chat">
-            <p class="room-name">{room.name}</p>
-            <div id="convo" class="convo">
-                <p each={chatLog} class="message"><span class="user {color}">{username}:</span> <span class="text"> {message}</span></p>
-            </div>
-            <input class="chat-box" type="text" placeholder="chat" onkeyup={chatMessageChange} value={chatMessage}>
-        </div>
+        <chat />
 
         <!-- stage -->
         <div class="stage">
@@ -132,33 +47,18 @@
 
     <script>
         var self = this
-        self.creatingPlaylist = false
-        self.playlistToDelete = undefined
-        self.chatColors = [
-            'green-text',
-            'aqua-text',
-            'pink-text',
-            'purple-text',
-            'blue-text',
-            'brown-text'
-        ]
-        self.chatLog = []
 
         RiotControl.on('render_room', function(user, room) {
             self.user = user
-            //let self.room get set in updateRoom
 
-            //get users playlists
-            self.getUserPlaylists(function() {
-                //set current playlist to the first one
-                self.setCurrentPlaylist(self.playlists[0])
+            console.log('render room')
+            RiotControl.trigger('room.init', user)
 
-                //update room after lists are loaded
-                self.updateRoom(room)
+            //update room after lists are loaded
+            self.updateRoom(room)
 
-                //set up youtube player
-                self.setupPlayer(room)
-            })
+            //set up youtube player
+            self.setupPlayer(room)
 
             //leave room if the user closes the window
             //also happens on refresh
@@ -169,8 +69,25 @@
             //socket will also emit room_users_changed at this point
         })
 
+        //stay informed of playlist changes
+        RiotControl.on('playlists.set_current_list', function(list) {
+            self.currentList = list
+            self.checkOpenDjSpot()
+            self.update()
+        })
+
         RiotControl.on('force_leave_room', function() {
             self.leaveRoom()
+        })
+
+        RiotControl.on('update_user', function(user) {
+            self.user = user
+            self.update()
+        })
+
+        RiotControl.on('update_room', function(room) {
+            self.room = room
+            self.update()
         })
 
         //sets up the like dance timer
@@ -190,17 +107,6 @@
                 }
                 self.update()
             }, 666)
-        }
-
-        //gets the users playlist data
-        getUserPlaylists(callback) {
-            var listUrl = '/api/playlists/'
-            listUrl += self.user.playlists.join(',')
-
-            U.ajax('GET', listUrl, function(lists) {
-                self.playlists = lists
-                if(callback) callback()
-            })
         }
 
         //handle youtube player state changes
@@ -266,43 +172,20 @@
         prepNextTrack() {
             //reset uesr playing
             self.userIsPlayling = false
-            
-            //when video ends move it to the end of current djs current playlist
-            //take first track from playlist out
-            var justPlayed = self.currentList.tracks.shift()
 
-            //and add it to the back
-            self.currentList.tracks.push(justPlayed)
-            
-            //post new current list order
-            U.ajax('POST', '/api/playlistorder', function(playlist) {
-                //update users playlist
-                self.setCurrentPlaylist(playlist)
-                self.update()
-            }, self.currentList)
-
+            //tell playlist to update
+            RiotControl.trigger('room.user_track_played')
 
             //update next room dj
             //get the next dj spot
             var nextDjSpot = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
-            console.log('nextDj ' + nextDjSpot)
 
             var nextDj = {nextDjSpot: nextDjSpot, nextDjId: self.room.djs[nextDjSpot].googleId}
             //set the next currentDj in the room
             //updateRoom should start them playing
             U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                 //will fire room_users_changed
-                console.log(updatedRoom)
             }, nextDj)
-            
-
-            //removing because it should be handled by socket update
-            /*else {
-                //if user is not dj
-                var nextDj = self.room.currentDj.spot < self.room.djs.length - 1 ? self.room.currentDj.spot + 1 : 0
-                self.playMyNextTrack(self.room.djs[nextDj], nextDj)
-                self.update()
-            }*/
         }
 
         //user likes the track!
@@ -344,82 +227,6 @@
             }, {audience: self.room.audience, djs: self.room.djs})
         }
 
-        //listen for chat typing
-        chatMessageChange(e) {
-            self.chatMessage = e.target.value
-
-            //hit enter key, post to server
-            if(e.keyCode == 13 && self.chatMessage.trim().length > 0) {
-                socket.emit('chat_message', {
-                    googleId: self.user.googleId,
-                    username: self.user.name,
-                    color: self.getChatColor(),
-                    message: encodeURIComponent(self.chatMessage.trim())
-                })
-                //clear message
-                self.chatMessage = ''
-            }
-        }
-
-        getChatColor() {
-            var color
-            //loop through chat log in reverse
-            for (var i = self.chatLog.length - 1; i >= 0; i--) {
-                //look for user in chat log
-                if(self.user.name == self.chatLog[i].username) {
-                    //save their last color
-                    color = self.chatLog[i].color
-                }
-            }
-            //if the last message did not use their color
-            if(color) {
-                if(color != self.chatLog[self.chatLog.length-1].color ||
-                    self.user.name == self.chatLog[self.chatLog.length-1].username) {
-                    return color
-                }
-            }
-
-            //if user isnt in the chat log or their color was used
-            //get them a new color
-            var c, nc, cl = self.chatLog.length
-            while(!c) {
-                nc = Math.floor(Math.random()*self.chatColors.length)
-                if(cl == 0) {
-                    c = self.chatColors[nc]
-                } else if(cl == 1 && nc != self.chatLog[0].color) {
-                    c = self.chatColors[nc]
-                } else if(nc != self.chatLog[cl-1].color && nc != self.chatLog[cl-2].color) {
-                    c = self.chatColors[nc]
-                } else {
-                    //console.log('tried to be prev color')
-                }
-            }
-            return c
-        }
-
-        //update chat
-        socket.on('new_chat_message', function(newMessage) {
-            var isDj = U.getOne('googleId', newMessage.googleId, self.room.djs);
-            var isAud = U.getOne('googleId', newMessage.googleId, self.room.audience);
-            
-            //only update if chatter is in the room
-            if(isDj || isAud) {
-                //dont let the chat log get too long
-                if(self.chatLog.length > 200) {
-                    self.chatLog.shift()
-                }
-
-                newMessage.message = decodeURIComponent(newMessage.message)
-
-                //update chat log
-                self.chatLog.push(newMessage)
-                self.update()
-
-                //scroll chat to bottom
-                document.getElementById('convo').scrollTop = 10000;
-            }
-        })
-
         //listen for user activity
         socket.on('room_users_changed', function(updatedRoom) {
             if(self.userInRoom(updatedRoom)) {
@@ -446,7 +253,7 @@
                     }
                 } else {
                     //otherwise save updated room but dont render yet
-                    self.room = updatedRoom
+                    RiotControl.trigger('update_room', updatedRoom)
                 }
             }
         })
@@ -464,7 +271,7 @@
             //if user is in the room, and there is a current track
             if(self.userInRoom(room) && room.currentTrack) {
                 //load youtube player with current track
-                self.room = room
+                RiotControl.trigger('update_room', room)
                 //play the current track if there is one
                 if(self.player) {
                     self.player.loadVideoById(room.currentTrack._id)
@@ -474,7 +281,6 @@
                 }
 
                 self.update()
-                //console.log(self.room)
             }
         }
 
@@ -539,24 +345,20 @@
 
         //refresh room with new data
         updateRoom(room) {
-            console.log('updateRoom!')
             //if the next dj should start playing
             var startNewDj = false
             if(room.currentDj && self.room) {
-                console.log('new room has dj and room exists')
+                
                 //the last dj quit while playing
                 if(self.room.currentDj) {
-                    console.log('room had dj')
-                    console.log(room.currentDj.googleId, self.room.currentDj.googleId)
                     if(room.currentDj.googleId != self.room.currentDj.googleId) {
-                        console.log('dj is different than before')
                         //start new dj if user is newly assigned dj
                         if(room.currentDj.googleId == self.user.googleId) {
-                            console.log('same id')
                             startNewDj = true
                         }
                     }
                 }
+                
             } else if(!self.room) {
                 //no self.room defined, first room update
                 //this starts the current track video when entering a room
@@ -566,7 +368,7 @@
             }
 
             //update new room data
-            self.room = room
+            RiotControl.trigger('update_room', room)
 
             //if you are djing, no open dj spot
             if(U.getOne('_id', self.user._id, room.djs)) {
@@ -574,11 +376,10 @@
             } else {
                 self.userIsDj = false
             }
-
+            
             //is dj spot open
             self.checkOpenDjSpot()
-
-
+            
             //if the room has a dj currently playing a track
             if(room.currentDj != undefined) {
                 //loop through djs to set which is playing
@@ -591,7 +392,6 @@
 
                 //start the video if needed
                 if(startNewDj) {
-                    console.log('starting new dj')
                     self.playMyNextTrack(self.user, room.currentDj.spot)
                 }
             } else {
@@ -654,57 +454,6 @@
             }
         }
 
-        //select a playlist 
-        selectPlaylist(e) {
-            self.setCurrentPlaylist(e.item)
-            self.selectingList = false
-        }
-
-        //open playlist dropdown
-        openPlaylists(e) {
-            var listUrl = '/api/playlists/'
-            listUrl += self.user.playlists.join(',')
-
-            //get users playlists
-            U.ajax('GET', listUrl, function(lists) {
-                self.playlists = lists
-                self.selectingList = true
-                self.update()
-            })
-        }
-
-        //close playlist dropdown
-        closePlaylists(e) {
-            self.selectingList = false
-        }
-
-        //show/hide the delete playlist confirmation
-        toggleDeletePlaylist(e) {
-            self.playlistToDelete = e.item
-        }
-
-        //delete the playlist
-        deletePlaylist(e) {
-            U.ajax('POST', '/api/removeplaylist', function(user) {
-                self.playlistToDelete = undefined
-                self.user = user
-                self.getUserPlaylists(self.update)
-            }, {
-                user: self.user,
-                playlist: self.playlistToDelete
-            })
-        }
-
-        //toggle create playlist form
-        togglePlaylistForm(e) {
-            self.creatingPlaylist = !self.creatingPlaylist
-        }
-
-        //new playlist name
-        playlistNameChange(e) {
-            self.newPlaylistName = e.target.value
-        }
-
         leaveRoomClicked(e) {
             self.leaveRoom(true)
         }
@@ -740,59 +489,25 @@
             
             //make sure local room has correct dj
             self.room.currentDj = {spot: spot, googleId: dj.googleId}
-            
-            //if current user is the next dj to play
-            //if(dj.googleId == self.user.googleId) {
-                //make sure user has a track to play
-                if(self.currentList.tracks) {
-                    self.userIsPlayling = true
-                    //set the next current track to play in the room
-                    //send the first item of their current playlist to the room
-                    var djData = {
-                        track: self.currentList.tracks[0], 
-                        date: new Date().toString()
-                    };
-                    
-                    U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
-                        //socket emits room_track_changed
-                        console.log('changed room track')
-                    }, djData)
-                } else {
-                    //if they dont have a track ready, quit and stay in room
-                    quitDj(true)
-                }
-            //}
-        }
 
-        //create the new playlist
-        createPlaylist(e) {
-            self.postingPlaylist = true
-            //post a new playlist
-            U.ajax('POST', '/api/playlists', function(data) {
-                self.user = data.user
-                self.setCurrentPlaylist(data.playlist)
-                self.playlists = data.playlists
-                self.creatingPlaylist = false
-                self.postingPlaylist = false
-                self.newPlaylistName = ''
-                self.update()
-            }, {
-                creatorId: self.user.googleId,
-                creatorName: self.user.name,
-                name: self.newPlaylistName,
-                privateList: false,
-                tracks: []
-            })
-        }
-
-        //loop through current playlist tracks and assign index
-        setCurrentPlaylist(list) {
-            for(var i=0, l=list.tracks.length; i<l; i++) {
-                list.tracks[i].index = i + 1
+            //make sure user has a track to play
+            if(self.currentList.tracks) {
+                self.userIsPlayling = true
+                //set the next current track to play in the room
+                //send the first item of their current playlist to the room
+                var djData = {
+                    track: self.currentList.tracks[0], 
+                    date: new Date().toString()
+                };
+                
+                U.ajax('PUT', '/api/roomtrack/' + self.room._id, function(data) {
+                    //socket emits room_track_changed
+                    console.log('changed room track')
+                }, djData)
+            } else {
+                //if they dont have a track ready, quit and stay in room
+                quitDj(true)
             }
-            self.currentList = list
-            self.checkOpenDjSpot()
-            self.update()
         }
 
         checkOpenDjSpot() {
@@ -804,241 +519,5 @@
                 }
             }
         }
-
-        searchChanged(e) {
-            if(e.keyCode == 27) {
-                //hit escape key, kill search
-                self.closeSearch()
-            } else {
-                //set up query to be searched
-                self.query = e.target.value
-
-                if(self.query.trim().length > 0) {
-                    //if value in field, call search
-                    self.searching = true
-                    self.search()
-                } else {
-                    //if no value, close search
-                    self.closeSearch()
-                }
-            }
-        }
-
-        search() {
-            //set up query
-            var q = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video'
-            q += '&videoCategoryId=10&maxResults=20&videoEmbeddable=true&videoSyndicated=true'
-            q += '&key=AIzaSyBRzzVaMuLFIKLA2MAcbmEWVbx5JWXmxSE&q='
-            q += encodeURIComponent(self.query)
-
-            //set search on delay timer
-            try {
-                window.clearTimeout(searchTimer)
-            } catch(e) {
-                //no time to clear
-            }
-
-            searchTimer = window.setTimeout(function() {
-                U.ajax('GET', q, function(data) {
-
-                    var tl = self.currentList.tracks.length
-                    var rl = data.items.length
-
-                    //check if any results are already in playlist
-                    for(var i=0; i<tl; i++) {
-                        for(var j=0; j<rl; j++) {
-                            //if video id matches track _id set added to true
-                            if(self.currentList.tracks[i]._id == data.items[j].id.videoId) {
-                                data.items[j].added = true
-                            }
-                        }
-                    }
-                    self.searchResults = data.items
-                    self.update()
-                })
-            }, 666)
-        }
-
-        previewTrack(e) {
-            //loop through current results
-            for(var i=0, l=self.searchResults.length; i<l; i++) {
-                //check if result was clicked
-                if(e.item.id.videoId == self.searchResults[i].id.videoId) {
-                    //if yes, set preview to true
-                    self.searchResults[i].preview = true
-                } else {
-                    //otherwise false
-                    self.searchResults[i].preview = false
-                }
-            }
-            self.update()
-
-            setTimeout(function() {
-                //init the preview youtube player
-                self.previewPlayer = new YT.Player('yt-preview', {
-                    playerVars: {
-                        autoplay: 1,
-                        disablekb: 1,
-                        modestbranding: 1,
-                        rel: 0,
-                        showinfo: 0
-                    },
-                    events: {
-                        'onStateChange': self.onPreviewStateChange
-                    }
-                })
-            }, 100)
-        }
-
-        onPreviewStateChange(e) {
-            //if the room player exists
-            if(self.player && !self.playerMuted) {
-                if(e.data == 1) {
-                    //if preview playing, mute room player
-                    self.player.mute()
-                } else if(e.data == 0 || e.data == 2) {
-                    //if preview paused or ended, unmute room player
-                    self.player.unMute()
-                } else {
-
-                }
-            }
-        }
-
-        closeSearch(e) {
-            self.query = ''
-            self.searching = false
-            window.clearTimeout(searchTimer)
-            self.searchResults = []
-            //unmute room player
-            if(self.player && !self.playerMuted) self.player.unMute()
-        }
-
-        //adds a track to the end of users current playlist
-        addToPlaylist(e) {
-            var trackData = {
-                track: {
-                    _id: e.item.id.videoId,
-                    title: e.item.snippet.title
-                },
-                playlistId: self.currentList._id
-            }
-
-            e.item.added = true
-
-            U.ajax('POST', '/api/addtrack', function(updatedPlylist) {
-                self.setCurrentPlaylist(updatedPlylist)
-                self.update()
-            }, trackData)
-        }
-
-        //remove a clicked track from a playlist
-        removeFromPlaylist(e) {
-            console.log('removing from '+self.currentList._id)
-            U.ajax('POST', '/api/removetrack', function(updatedPlylist) {
-                self.setCurrentPlaylist(updatedPlylist)
-                self.update()
-            }, {
-                playlistId: self.currentList._id,
-                trackId: e.item._id
-            })
-        }
-
-        //on mouse down on track
-        startTrackDrag(e) {
-            console.log('dragging')
-            //prevent user from dragging current playing track
-            if(self.userIsPlayling && e.item.index == 0) return
-            
-            var t = e.currentTarget.parentElement
-            var startY = e.clientY
-            var oldClass = t.className
-            var newSpot = oldSpot = e.item.index - 1
-            
-            t.className = t.className + ' dragging'
-
-            //follow mouse move
-            document.onmousemove = function(e) {
-                t.style.top = (e.clientY - startY) + 'px'
-                t.style.pointerEvents = 'none'
-            }
-
-            //on release
-            document.body.onmouseup = function(e) {
-                t.className = oldClass
-                t.style.top = '0px';
-
-                //find parent playlist-track
-                if(U.hasClass(e.target.parentElement, 'playlist-track')) {
-                    //get playlist-track index
-                    newSpot = U.getElementIndex(e.target.parentElement)
-                } else if(U.hasClass(e.target, 'playlist-track')) {
-                    newSpot = U.getElementIndex(e.target)
-                } else {
-                    //do nothing
-                    self.stopDrag()
-                    t.style.pointerEvents = 'auto'
-                    return
-                }
-
-                //if user tries to move track into currently playing track
-                //set new spot to 1 instead of 0
-                if(self.userIsPlayling && newSpot == 0) newSpot = 1
-                
-
-                //reorder track array with track in newSpot position
-                U.moveListItem(self.currentList.tracks, oldSpot, newSpot)
-                self.setCurrentPlaylist(self.currentList)
-                self.update()
-
-                console.log(self.currentList)
-
-                //post new current list order
-                U.ajax('POST', '/api/playlistorder', function(playlist) {
-                    self.setCurrentPlaylist(playlist)
-                    self.update()
-                }, self.currentList)
-
-                self.stopDrag()
-                t.style.pointerEvents = 'auto'
-            }
-        }
-
-        //when mouse is released after dragging
-        stopDrag() {
-            //remove handlers
-            document.body.onmouseup = undefined
-            document.onmousemove = undefined
-            document.getElementById('playlists').mouseleave = undefined
-        }
-
-        //clicking arrow up on playlist track item
-        moveTrackToTop(e) {
-            self.stopDrag()
-
-            //remove topped item
-            var track = self.currentList.tracks.splice(e.item.index - 1, 1)[0]
-            //if user is playing track
-            if(self.userIsPlayling) {
-                //add to 2nd spot
-                self.currentList.tracks.splice(1, 0, track)
-            } else {
-                //if not playing, add item to top
-                self.currentList.tracks.unshift(track)
-            }
-
-            //set new playlist order
-            self.setCurrentPlaylist(self.currentList)
-
-            //post new current list order
-            U.ajax('POST', '/api/playlistorder', function(playlist) {
-                self.setCurrentPlaylist(playlist)
-                self.update()
-            }, self.currentList)
-        }
     </script>
 </room>
-
-
-
-

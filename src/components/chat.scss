@@ -1,0 +1,39 @@
+chat {
+    .green-text {color: $highlight;}
+    .aqua-text {color: #0abbd0;}
+    .pink-text {color: #c259b2;}
+    .purple-text {color: #9261da;}
+    .blue-text {color: #385dfb;}
+    .brown-text {color: #7e764b;}
+    position: relative;
+    padding: 13px;
+    width: 25%;
+    border-right: 2px solid $gray-dark;
+
+    .room-name {
+        color: $white;
+        margin-bottom: 40px;
+        font-weight: 500;
+    }
+
+    .convo {
+        overflow-y: hidden;
+        height: calc(100% - 101px); //19 + 40 + 42;
+
+        .message {
+            margin-bottom: 22px;
+        }
+
+        &:hover {
+            overflow-y: scroll;
+        }
+    }
+
+    .chat-box {
+        @include text-field();
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        width: 100%;
+    }
+}
