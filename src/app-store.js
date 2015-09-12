@@ -60,7 +60,6 @@ function AppStore() {
 
             } else if(p1 == 'room') {
                 //ENTER A ROOM
-                console.log('hit room')
                 self.inRoom = true;
                 
                 //get latest list of rooms
@@ -73,14 +72,12 @@ function AppStore() {
                         
                         if(!isAud && !isDj) {
                             //add user to room
-                            console.log('adding to room')
                             room.audience.push(self.user);    
                         }
                         
                         //update room in db with new audience and djs
                         U.ajax('PUT', '/api/updateroom/' + room._id, function(updatedRoom) {
                             //user joined room
-                            console.log('rendered room')
                             self.trigger('screen_changed', 'room');
                             self.trigger('render_room', self.user, updatedRoom);
                         }, {audience: room.audience});

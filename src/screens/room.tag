@@ -26,7 +26,7 @@
                     <button class="mute" onclick={toggleMute}>
                         <span hide={playerMuted}>Mute</span><span show={playerMuted}>Unmute</span>
                     </button>
-                    <button class="skip" show={userIsPlayling} onclick={prepNextTrack}>Skip song</button>
+                    <button class="skip" show={userIsPlayling && room.djs.length > 1} onclick={prepNextTrack}>Skip song</button>
                     <button class="like" onclick={likeTrack}>Dance</button>
                     <div class="progress-bar">
                         <div class="bg"></div>
@@ -244,10 +244,12 @@
             }
         }
 
-        createPlayer() {
+        createPlayer(room) {
+            var trackId = self.room ? self.room.currentTrack._id : room.currentTrack._id;
+
             //init the youtube player
             self.player = new YT.Player('yt-player', {
-                videoId: self.room.currentTrack._id,
+                videoId: trackId,
                 playerVars: {
                     //autoplay: 1,
                     controls: 0,
@@ -264,12 +266,19 @@
             self.playerMuted = false
         }
 
-        //only called from initial player creation
+        //should be called each time a player enters a room
         onPlayerReady(e) {
             console.log('player ready')
-            if(self.autoPlay) {
-                self.player.playVideo()
-                self.autoPlay = false
+            self.autoPlay = false
+            //get time passed in seconds from current track start date to now
+            if(self.room) {
+                if(self.room.currentTrack) {
+                    var startTime = 0
+                    startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
+                    //play vid and seek to time
+                    self.player.playVideo()
+                    self.player.seekTo(startTime + 0.666)
+                }
             }
         }
 
@@ -279,15 +288,6 @@
                 //play video immediately if paused
                 self.player.playVideo()
             } else if(e.data == 1) {
-                if(self.lastVideoState != 1 && self.lastVideoState != 3) {
-                    //get time passed in seconds from current track start date to now
-                    var startTime = 0
-                    startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
-                    console.log('seeking to ' + startTime + 0.666)
-                    //only seek if not playing track
-                    if(!self.userIsPlayling) self.player.seekTo(startTime + 0.666) //add 0.666 to fudge a little load time
-                }
-
                 //video is playing
                 if(self.room.djs.length == 0) {
                     self.stopVideo()
@@ -327,7 +327,9 @@
                 if(self.player) {
                     self.player.loadVideoById(room.currentTrack._id)
                     self.player.playVideo();
-                } else {
+                }else {
+                    //called when user becomes first dj
+                    console.log('creating player from setup')
                     self.autoPlay = true
                     self.createPlayer()
                 }
@@ -366,15 +368,13 @@
                     }
                 }
                 
-            }/* else if(!self.room) {
+            } else if(!self.room) {
                 //no self.room defined, first room update
                 //this starts the current track video when entering a room
-                //startNewDj = true
-                console.log('eh')
-                self.createPlayer()
-                console.log('eh22')
+                startNewDj = true
+                self.createPlayer(room)
                 self.update()
-            }*/
+            }
 
             //update new room data
             RiotControl.trigger('update_room', room)
@@ -399,10 +399,10 @@
                 //set current dj flag on dj
                 room.djs[room.currentDj.spot].isPlaying = true
 
-                //start the video if needed
-                if(startNewDj) {
-                    self.playMyNextTrack(self.user, room.currentDj.spot)
+                if(startNewDj && self.userIsDj) {
+                    self.playMyNextTrack(room.currentDj.spot)
                 }
+
             } else {
                 //no djs
                 if(self.player) {
@@ -428,8 +428,8 @@
                 //if the user is the only dj
                 if(updatedRoom.djs.length == 1) {
                     //start playing the first song in their current playlist
-                    console.log('im DJ!')
-                    self.playMyNextTrack(self.user, 0);
+                    console.log('im first DJ!')
+                    self.playMyNextTrack(0);
                 }
             }, {audience: self.room.audience, djs: self.room.djs, changeDj: true})
         }
@@ -468,19 +468,15 @@
         leaveRoom(forceLobby) {
             window.onbeforeunload = undefined
             clearInterval(self.likeTimer)
-            console.log('leave1')
+            
             //if user was dj, quit dj
             if(self.userIsDj) self.quitDj()
 
             //remove user from local audience
             U.removeOne('_id', self.user._id, self.room.audience)
-            console.log('leave2')
             //clear video
             self.stopVideo()
-            console.log('leave3')
-            //clear chat
-            self.chatLog = []
-            console.log('leaving room')
+            
             //send updated room djs and audience
             U.ajax('PUT', '/api/updateroom/' + self.room._id, function(updatedRoom) {
                 //updated room is sent via socket as room_users_changed
@@ -491,10 +487,10 @@
 
         //called from first dj stepping up
         //also from when current djs song ends
-        playMyNextTrack(dj, spot) {
+        playMyNextTrack(djSpot) {
             
             //make sure local room has correct dj
-            self.room.currentDj = {spot: spot, googleId: dj.googleId}
+            self.room.currentDj = {spot: djSpot, googleId: self.user.googleId}
 
             //make sure user has a track to play
             if(self.currentList.tracks) {

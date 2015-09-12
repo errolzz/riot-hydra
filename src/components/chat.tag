@@ -20,6 +20,7 @@
         RiotControl.on('room.init', function(user, room) {
             self.user = user
             self.room = room
+            self.chatLog = []
             self.update()
         })
 
