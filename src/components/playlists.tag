@@ -9,7 +9,7 @@
             <li class="result" each={searchResults}>
                 <iframe id="yt-preview" if={preview} class="preview-player" type="text/html" 
                     width="100%" height="auto" 
-                    frameborder="0"
+                    frameborder="0" 
                     src="http://www.youtube.com/embed/{id.videoId}?autoplay=1&enablejsapi=1">
                 </iframe>
                 <div class="preview">
@@ -111,6 +111,11 @@
 
         RiotControl.on('update_user', function(user) {
             self.user = user
+            self.update()
+        })
+
+        RiotControl.on('update_user_playing', function(playing) {
+            self.userIsPlayling = playing
             self.update()
         })
 

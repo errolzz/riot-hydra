@@ -132,6 +132,7 @@
         prepNextTrack() {
             //reset uesr playing
             self.userIsPlayling = false
+            RiotControl.trigger('update_user_playing', self.userIsPlayling)
 
             //tell playlist to update
             RiotControl.trigger('room.user_track_played')
@@ -207,7 +208,7 @@
                     //if currentList is ready (and everything else) update room now
                     self.renderRoom(updatedRoom)
                     try {
-                        console.log('prepped next track ' + updatedRoom.currentDj.googleId)
+                        console.log('prepped next dj ' + updatedRoom.currentDj.googleId)
                     } catch(e) {
 
                     }
@@ -276,8 +277,10 @@
                     var startTime = 0
                     startTime = (new Date().getTime() - new Date(self.room.currentTrack.date).getTime()) / 1000
                     //play vid and seek to time
-                    self.player.playVideo()
-                    self.player.seekTo(startTime + 0.666)
+                    self.player.loadVideoById(self.room.currentTrack._id)
+                    setTimeout(function() {
+                        self.player.seekTo(startTime + 0.666)
+                    }, 0.666);
                 }
             }
         }
@@ -326,7 +329,7 @@
                 //play the current track if there is one
                 if(self.player) {
                     self.player.loadVideoById(room.currentTrack._id)
-                    self.player.playVideo();
+                    //self.player.playVideo();
                 }else {
                     //called when user becomes first dj
                     console.log('creating player from setup')
@@ -357,10 +360,11 @@
             //if the next dj should start playing
             var startNewDj = false
             if(room.currentDj && self.room) {
-                
                 //the last dj quit while playing
                 if(self.room.currentDj) {
-                    if(room.currentDj.googleId != self.room.currentDj.googleId) {
+                    //if user is not already current dj
+                    //if(room.currentDj.googleId != self.room.currentDj.googleId) {
+                    if(!self.userIsPlayling) {
                         //start new dj if user is newly assigned dj
                         if(room.currentDj.googleId == self.user.googleId) {
                             startNewDj = true
@@ -400,6 +404,7 @@
                 room.djs[room.currentDj.spot].isPlaying = true
 
                 if(startNewDj && self.userIsDj) {
+                    console.log('I AM DJ PLAYYY')
                     self.playMyNextTrack(room.currentDj.spot)
                 }
 
@@ -443,6 +448,7 @@
             //if user was dj, stop video
             if(self.userIsPlayling) {
                 self.userIsPlayling = false
+                RiotControl.trigger('update_user_playing', self.userIsPlayling)
                 self.stopVideo()
             }
 
@@ -495,6 +501,7 @@
             //make sure user has a track to play
             if(self.currentList.tracks) {
                 self.userIsPlayling = true
+                RiotControl.trigger('update_user_playing', self.userIsPlayling)
                 //set the next current track to play in the room
                 //send the first item of their current playlist to the room
                 var djData = {

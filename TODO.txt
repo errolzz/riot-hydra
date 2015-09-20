@@ -3,14 +3,17 @@
 TODO:
 ------------------------------------------------------------------------
 
+joining room with video playing, vid progress doesnt work
+make room list live update
+video progress stays where it was when you quit dj/leave room
+
+
+
+CANNOT REPRODUCE
+quitting dj stops track for user, doesnt update room users
+video can be paused
 joining old room, user gets stuck there?
-
-drag and drop songs broken?
-joining a room causes current dj to reset start date of current video
-
-
 song ended, didnt move to next DJ
-video progress janky
 
 
 

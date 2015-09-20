@@ -21,12 +21,17 @@
             self.user = user
             self.room = room
             self.chatLog = []
+            console.log('room init')
             self.update()
         })
 
         RiotControl.on('update_room', function(room) {
             self.room = room
             self.update()
+        })
+
+        RiotControl.on('leave_room', function(stayInRoom) {
+            self.chatLog = []
         })
 
         //listen for chat typing
