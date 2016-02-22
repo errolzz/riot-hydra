@@ -1,4 +1,7 @@
 # HYDRA.FM #
+An experimental social music listening application.
+
+http://wzrdfght.com/#hydra-fm
 
 1. install mongodb: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/
 2. terminal tab 1 start mongo `mongod`
