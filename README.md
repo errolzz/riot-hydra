@@ -6,5 +6,3 @@
 5. terminal tab 3 run `node server`
 6. view app at http://localhost:8000/
 
-
-I think that's it?
